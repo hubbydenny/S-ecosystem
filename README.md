@@ -1,6 +1,6 @@
 # S-ecosystem
 Simple Linux ecosystem writen is C++
-##Instalation
+##Instalation of sfetch
 1. Make sure you have git:
 On arch:
 ```
@@ -12,4 +12,10 @@ git clone https://github.com/hubbydenny/S-ecosystem
 ```
 3. Run the installer for Sfetch:
 ```
+cd minicore/installers
+/.install-sfetch.sh
+```
+4. Run and enjoy the sfetch!
+```
+sfetch
 ```
