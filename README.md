@@ -23,4 +23,3 @@ sfetch
 =======
 ## License
 This project is licensed under the [GNU License](LICENSE).
->>>>>>> 0d963df1a4b20387adeb238fd2e942e5a500143a
