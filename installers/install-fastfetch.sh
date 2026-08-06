@@ -22,4 +22,4 @@ if ! echo "$PATH" | tr ':' '\n' | grep -qx "$DEST_DIR"; then
     fi
 fi
 
-echo "==> done. Open a new terminal and run: sfetch"
+echo "==> done, run sfetch"

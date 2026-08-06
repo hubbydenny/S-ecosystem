@@ -5,7 +5,6 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Общая библиотека: цвета ANSI, чтение /proc, терминальные утилиты.
 # Каждая утилита линкуется только с ней — ничего внешнего.
 add_library(core STATIC
     src/common/color.cpp
