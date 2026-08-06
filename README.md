@@ -13,7 +13,7 @@ git clone https://github.com/hubbydenny/S-ecosystem
 3. Run the installer for Sfetch:
 ```
 cd S-ecosystem/installers
-/.install-sfetch.sh
+sh install-sfetch.sh
 ```
 4. Run and enjoy the sfetch!
 ```
