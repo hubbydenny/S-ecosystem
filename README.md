@@ -12,7 +12,7 @@ git clone https://github.com/hubbydenny/S-ecosystem
 ```
 3. Run the installer for Sfetch:
 ```
-cd minicore/installers
+cd S-ecosystem/installers
 /.install-sfetch.sh
 ```
 4. Run and enjoy the sfetch!
