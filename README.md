@@ -1,6 +1,6 @@
 # S-ecosystem
-Simple Linux ecosystem writen is C++
-##Instalation of sfetch
+Simple Linux ecosystem writen in C++
+## Instalation of sfetch
 1. Make sure you have git:
 On arch:
 ```
@@ -19,3 +19,5 @@ cd minicore/installers
 ```
 sfetch
 ```
+## License
+This project is licensed under the [GNU License](LICENSE).
