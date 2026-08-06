@@ -19,8 +19,7 @@ cd minicore/installers
 ```
 sfetch
 ```
-<<<<<<< HEAD
-![Alt Text - description of the image](https://i.imgur.com/QskKTGl.jpeg)
+![Preview!](https://i.imgur.com/QskKTGl.jpeg)
 =======
 ## License
 This project is licensed under the [GNU License](LICENSE).
