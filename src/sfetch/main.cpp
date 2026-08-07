@@ -121,8 +121,9 @@ int main() {
     Config cfg = loadConfig(path);
 
 if (!fs::exists(path)) {
-  fs::create_directories(path);
-}
+  fs::create_directories(path); // need to be fixed 
+   }
+
     struct sysinfo info;
     if (sysinfo(&info) != 0) {
         std::cerr << "Error retrieving system information\n";
