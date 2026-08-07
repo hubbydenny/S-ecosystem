@@ -151,6 +151,8 @@ int main() {
     showInfo("cpu", getCPUModel());
     } if (cfg.gpu){
     showInfo("gpu", getGPUModel());
+    } if (cfg.lastrun && !cfg.lastrunstr.empty()) {
+      std::cout << colors::BLUE << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n"; 
     }
     try {
         toml::table t = toml::parse_file(path);             
@@ -158,8 +160,5 @@ int main() {
         t.insert("state", toml::table{});
         t["state"].as_table()->insert_or_assign("lastrun", currentTime());
         std::ofstream(path) << t;
-    } catch (const toml::parse_error& e) { std::cerr << "Error config fail" << std::endl; }
-    if (cfg.lastrun && !cfg.lastrunstr.empty()) {
-      std::cout << colors::BLUE << "lastrun" << "  " << colors::RESET << cfg.lastrun << "\n"; 
-    }
+    } catch (const toml::parse_error& e) { std::cerr << "Error config fail" << std::endl; }  
 }

@@ -67,8 +67,9 @@ Config loadConfig(const std::string& path) {
         c.freeram = t["setup"]["freeram"].value_or(c.freeram);
         c.logo    = t["setup"]["logo"].value_or(c.logo);
         c.line    = t["setup"]["line"].value_or(c.line);
-        c.lastrun = t["state"]["lastrun"].value_or(c.lastrun);
-        
+        c.lastrun = t["setup"]["lastrun"].value_or(c.lastrun);
+        c.lastrunstr = t["state"]["lastrun"].value_or(c.lastrunstr);
+
         std::string n = t["colors"]["logocolor"].value_or(std::string("white"));
         if      (n == "green") c.logocolor = colors::GREEN;
         else if (n == "blue")  c.logocolor = colors::BLUE;
