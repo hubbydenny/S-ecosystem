@@ -26,7 +26,7 @@ logo = true
 line = true
 
 [colors]
-logocolor = "green"
+logocolor = "white"
 )";
     std::cout << "~ created default config: " << path << "\n";
 };
@@ -44,7 +44,7 @@ bool fullram = false;
 bool freeram = false;
 std::string logocolor = colors::RESET;
 std::string lastrun;
-//bool shell = true;
+//bool shell = true;::
 };
 Config loadConfig(const std::string& path) {
     Config c;
@@ -67,6 +67,8 @@ Config loadConfig(const std::string& path) {
         std::string n = t["colors"]["logocolor"].value_or(std::string("green"));
         if      (n == "green") c.logocolor = colors::GREEN;
         else if (n == "blue")  c.logocolor = colors::BLUE;
+        else if (n = "white") c.logocolor = colors::RESET;
+        else if (n = "pink") c.logocolor = colors::PINK;
         else                   c.logocolor = colors::RESET;
         
     } catch (const toml::parse_error& e) {

@@ -109,10 +109,13 @@ void showInfo(const std::string& key, const std::string& value) {
 }
 
 int main() {
+    std::string path = std::string(getenv("HOME")) + "/.config/sfetch/config.toml";
     ensureConfig(path);
     Config cfg = loadConfig(path);
-    std::string path = std::string(getenv("HOME")) + "/.config/sfetch/config.toml";
 
+if (!fs::exists(path)) {
+  fs::create_directories(path);
+}
     struct sysinfo info;
     if (sysinfo(&info) != 0) {
         std::cerr << "Error retrieving system information\n";
@@ -149,7 +152,7 @@ int main() {
         toml::table t = toml::parse_file(path);             
         if (!t.contains("state"))                      
         t.insert("state", toml::table{});
-        t["state"].as_table()->insert_or_assign("lastrun", lastrun);
+        t["state"].as_table()->insert_or_assign("lastrun", cfg.lastrun);
         std::ofstream(path) << t;
     } catch (const toml::parse_error& e) { std::cerr << "Error config fail" << std::endl; }
   }
