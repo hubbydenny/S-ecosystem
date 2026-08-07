@@ -9,6 +9,7 @@ namespace fs = std::filesystem;
 void ensureConfig(const std::string& path) {
     if (std::filesystem::exists(path)) return;
 
+    fs::create_directories(fs::path(path).parent_path());
     std::ofstream f(path);
     f << R"(# sfetch config is generated, edit it and type sfetch in shell
 
@@ -20,10 +21,11 @@ usedram = true
 procs = true
 cpu = true
 gpu = true
-fullram = false
-freeram = false
 logo = true
 line = true
+lastrun = true
+fullram = false
+freeram = false
 
 [colors]
 logocolor = "white"
@@ -42,8 +44,10 @@ bool logo = true;
 bool line = true;
 bool fullram = false;
 bool freeram = false;
+bool lastrun = true;
+std::string textcolor = colors::BLUE;
 std::string logocolor = colors::RESET;
-std::string lastrun;
+std::string lastrunstr;
 //bool shell = true;::
 };
 Config loadConfig(const std::string& path) {
@@ -63,8 +67,9 @@ Config loadConfig(const std::string& path) {
         c.freeram = t["setup"]["freeram"].value_or(c.freeram);
         c.logo    = t["setup"]["logo"].value_or(c.logo);
         c.line    = t["setup"]["line"].value_or(c.line);
-
-        std::string n = t["colors"]["logocolor"].value_or(std::string("green"));
+        c.lastrun = t["state"]["lastrun"].value_or(c.lastrun);
+        
+        std::string n = t["colors"]["logocolor"].value_or(std::string("white"));
         if      (n == "green") c.logocolor = colors::GREEN;
         else if (n == "blue")  c.logocolor = colors::BLUE;
         else if (n == "white") c.logocolor = colors::WHITE;

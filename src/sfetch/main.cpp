@@ -120,10 +120,6 @@ int main() {
     ensureConfig(path);
     Config cfg = loadConfig(path);
 
-if (!fs::exists(path)) {
-  fs::create_directories(path); // need to be fixed 
-   }
-
     struct sysinfo info;
     if (sysinfo(&info) != 0) {
         std::cerr << "Error retrieving system information\n";
@@ -137,7 +133,7 @@ if (!fs::exists(path)) {
     showplan9Logo();
     } std::cout << colors::BOLD << hostname << "@" << un.sysname << colors::RESET << "\n";
     if (cfg.line) {
-    std::cout << "----------\n";
+    std::cout << "=-=-=-=-=-=-=-=\n";
     } if (cfg.os) {
     showInfo("os", getDistro());
     } if(cfg.kernel) {
@@ -163,4 +159,7 @@ if (!fs::exists(path)) {
         t["state"].as_table()->insert_or_assign("lastrun", currentTime());
         std::ofstream(path) << t;
     } catch (const toml::parse_error& e) { std::cerr << "Error config fail" << std::endl; }
+    if (cfg.lastrun && !cfg.lastrunstr.empty()) {
+      std::cout << colors::BLUE << "lastrun" << "  " << colors::RESET << cfg.lastrun << "\n"; 
+    }
 }
