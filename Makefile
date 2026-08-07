@@ -1,6 +1,6 @@
 CXX      = g++
 CXXFLAGS = -std=c++20 -Wall -Wextra -O2
-INCLUDE  = -Isrc/helpers -Isrc/sfetch
+INCLUDE  = -Isrc/helpers -Isrc/sfetch -Iexternal/tomlplusplus/include
 
 # Готовые программы (только с main + кодом)
 BINS     = sfetch scat
