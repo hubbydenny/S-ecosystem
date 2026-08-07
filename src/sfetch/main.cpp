@@ -6,6 +6,7 @@
 #include <sys/utsname.h>
 #include <sys/sysinfo.h>
 
+// TODO 1. Fix logo, 2. Transfer colors to color 3. make config system with toml 4. logos
 const char* RESET = "\033[0m";
 const char* GREEN = "\033[1;32m";
 const char* BLUE  = "\033[1;34m";
@@ -64,8 +65,9 @@ std::string getGPUModel() {
     else if (vendor == "0x15ad") name = "VMware";
     else if (vendor == "0x80ee") name = "VirtualBox";
     else name = "Unknown GPU";
-    if (name != "Unknown GPU") name += " (" + device + ")";
+    if (name != "Unknown GPU") {
     return name;
+    }
 }
 
 std::string humanBytes(unsigned long long bytes) {
@@ -95,7 +97,7 @@ std::string humanUptime(long seconds) {
 
 void showLogo() {
     std::cout << GREEN
-              << "    (\\\n"
+              << "    (\\(\\\n"
               << "   j\". ..\n"
               << "  (  . .)\n"
               << "  |   \xC2\xB0 \xC2\xA1\n"
@@ -108,7 +110,7 @@ void showInfo(const std::string& key, const std::string& value) {
     std::cout << BLUE << key << RESET << "  " << value << "\n";
 }
 
-int main() {
+int main(void) {
     struct sysinfo info;
     if (sysinfo(&info) != 0) {
         std::cerr << "Error retrieving system information\n";
@@ -130,7 +132,7 @@ int main() {
     showInfo("ram", humanBytes(info.totalram - info.freeram)
                 + " / " + humanBytes(info.totalram));
     showInfo("cpu", getCPUModel());
-    showInfo("gpu", getGPUModel());
+    showInfo("gpu", getGPUModel()); 
 
     return 0;
 }
