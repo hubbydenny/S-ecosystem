@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include <filesystem>
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -6,9 +7,9 @@
 #include <sys/utsname.h>
 #include <sys/sysinfo.h>
 #include <color.h>
+#include <config.h>
 
-// TODO 1. Fix logo, 2. Transfer colors to color 3. make config system with toml 4. logos
-
+// TODO 1. Fix logo #DONE, 2. Transfer colors to color #DONE 3. make config system with toml #ALMOST 4. logos #Will make
 std::string readFile(const std::string& path) {
     std::ifstream file(path);
     if (!file.is_open()) return "";
@@ -93,45 +94,63 @@ std::string humanUptime(long seconds) {
 }
 
 void showplan9Logo() {
-    std::cout << GREEN
+    std::cout << colors::GREEN
               << "    (\\(\\\n"
               << "   j\". ..\n"
               << "  (  . .)\n"
               << "  |   \xC2\xB0 \xC2\xA1\n"
               << "  \xC2\xBF     ;\n"
               << "  c\?\".UJ\n"
-              << RESET;
+              << colors::RESET;
 }
 
 void showInfo(const std::string& key, const std::string& value) {
-    std::cout << BLUE << key << RESET << "  " << value << "\n";
+    std::cout << colors::BLUE << key << colors::RESET << "  " << value << "\n";
 }
 
 int main() {
+    ensureConfig(path);
+    Config cfg = loadConfig(path);
+    std::string path = std::string(getenv("HOME")) + "/.config/sfetch/config.toml";
+
     struct sysinfo info;
     if (sysinfo(&info) != 0) {
         std::cerr << "Error retrieving system information\n";
         return 1;
     }
-
     struct utsname un;
     uname(&un);
-
     char hostname[256];
     gethostname(hostname, sizeof hostname);
-
+    if (cfg.logo) {
     showplan9Logo();
-    std::cout << BOLD << hostname << "@" << un.sysname << RESET << "\n";
+    } std::cout << colors::BOLD << hostname << "@" << un.sysname << colors::RESET << "\n";
+    if (cfg.line) {
     std::cout << "----------\n";
+    } if (cfg.os) {
     showInfo("os", getDistro());
+    } if(cfg.kernel) {
     showInfo("kernel", std::string(un.release));
+    } if (cfg.uptime) {
     showInfo("uptime", humanUptime(info.uptime));
+    } if (cfg.usedram) {
     showInfo("ram", humanBytes(info.totalram - info.freeram)
                 + " / " + humanBytes(info.totalram));
-    //showInfo("totalram", humanBytes(info.totalram));
-    std::cout << BLUE << "procs" << "  " << RESET << info.procs << "\n";
+    } if (cfg.fullram) {
+    showInfo("totalram", humanBytes(info.totalram));
+    } if (cfg.procs) {
+    std::cout << colors::BLUE << "procs" << "  " << colors::RESET << info.procs << "\n";
+    } if (cfg.cpu) {
     showInfo("cpu", getCPUModel());
-    showInfo("gpu", getGPUModel()); 
-
-    return 0;
+    } if (cfg.gpu){
+    showInfo("gpu", getGPUModel());
+    } if (cfg.lastrun) {
+        try {
+        toml::table t = toml::parse_file(path);             
+        if (!t.contains("state"))                      
+        t.insert("state", toml::table{});
+        t["state"].as_table()->insert_or_assign("lastrun", lastrun);
+        std::ofstream(path) << t;
+    } catch (const toml::parse_error& e) { std::cerr << "Error config fail" << std::endl; }
+  }
 }
