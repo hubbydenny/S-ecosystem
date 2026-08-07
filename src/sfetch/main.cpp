@@ -5,6 +5,7 @@
 #include <cstring>
 #include <sys/utsname.h>
 #include <sys/sysinfo.h>
+#include <color.h>
 
 // TODO 1. Fix logo, 2. Transfer colors to color 3. make config system with toml 4. logos
 
@@ -91,7 +92,7 @@ std::string humanUptime(long seconds) {
     return buf;
 }
 
-void showLogo() {
+void showplan9Logo() {
     std::cout << GREEN
               << "    (\\(\\\n"
               << "   j\". ..\n"
@@ -119,7 +120,7 @@ int main() {
     char hostname[256];
     gethostname(hostname, sizeof hostname);
 
-    showLogo();
+    showplan9Logo();
     std::cout << BOLD << hostname << "@" << un.sysname << RESET << "\n";
     std::cout << "----------\n";
     showInfo("os", getDistro());
