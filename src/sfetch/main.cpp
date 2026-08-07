@@ -6,8 +6,17 @@
 #include <cstring>
 #include <sys/utsname.h>
 #include <sys/sysinfo.h>
+#include <ctime>
 #include <color.h>
 #include <config.h>
+
+std::string currentTime() {
+    std::time_t now = std::time(nullptr);
+    std::tm* tm = std::localtime(&now);
+    char buf[32];
+    std::strftime(buf, sizeof buf, "%Y-%m-%d %H:%M", tm);
+    return buf;
+}
 
 // TODO 1. Fix logo #DONE, 2. Transfer colors to color #DONE 3. make config system with toml #ALMOST 4. logos #Will make
 std::string readFile(const std::string& path) {
@@ -63,9 +72,7 @@ std::string getGPUModel() {
     else if (vendor == "0x15ad") name = "VMware";
     else if (vendor == "0x80ee") name = "VirtualBox";
     else name = "Unknown GPU";
-    if (name != "Unknown GPU") {
     return name;
-    }
 }
 
 std::string humanBytes(unsigned long long bytes) {
@@ -147,13 +154,12 @@ if (!fs::exists(path)) {
     showInfo("cpu", getCPUModel());
     } if (cfg.gpu){
     showInfo("gpu", getGPUModel());
-    } if (cfg.lastrun) {
-        try {
+    }
+    try {
         toml::table t = toml::parse_file(path);             
         if (!t.contains("state"))                      
         t.insert("state", toml::table{});
-        t["state"].as_table()->insert_or_assign("lastrun", cfg.lastrun);
+        t["state"].as_table()->insert_or_assign("lastrun", currentTime());
         std::ofstream(path) << t;
     } catch (const toml::parse_error& e) { std::cerr << "Error config fail" << std::endl; }
-  }
 }

@@ -67,8 +67,8 @@ Config loadConfig(const std::string& path) {
         std::string n = t["colors"]["logocolor"].value_or(std::string("green"));
         if      (n == "green") c.logocolor = colors::GREEN;
         else if (n == "blue")  c.logocolor = colors::BLUE;
-        else if (n = "white") c.logocolor = colors::RESET;
-        else if (n = "pink") c.logocolor = colors::PINK;
+        else if (n == "white") c.logocolor = colors::WHITE;
+        else if (n == "pink")  c.logocolor = colors::PINK;
         else                   c.logocolor = colors::RESET;
         
     } catch (const toml::parse_error& e) {
