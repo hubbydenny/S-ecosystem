@@ -7,10 +7,6 @@
 #include <sys/sysinfo.h>
 
 // TODO 1. Fix logo, 2. Transfer colors to color 3. make config system with toml 4. logos
-const char* RESET = "\033[0m";
-const char* GREEN = "\033[1;32m";
-const char* BLUE  = "\033[1;34m";
-const char* BOLD  = "\033[1m";
 
 std::string readFile(const std::string& path) {
     std::ifstream file(path);
@@ -102,7 +98,7 @@ void showLogo() {
               << "  (  . .)\n"
               << "  |   \xC2\xB0 \xC2\xA1\n"
               << "  \xC2\xBF     ;\n"
-              << "  c\".?UJ\n"
+              << "  c\?\".UJ\n"
               << RESET;
 }
 
@@ -110,7 +106,7 @@ void showInfo(const std::string& key, const std::string& value) {
     std::cout << BLUE << key << RESET << "  " << value << "\n";
 }
 
-int main(void) {
+int main() {
     struct sysinfo info;
     if (sysinfo(&info) != 0) {
         std::cerr << "Error retrieving system information\n";
@@ -131,6 +127,8 @@ int main(void) {
     showInfo("uptime", humanUptime(info.uptime));
     showInfo("ram", humanBytes(info.totalram - info.freeram)
                 + " / " + humanBytes(info.totalram));
+    //showInfo("totalram", humanBytes(info.totalram));
+    std::cout << BLUE << "procs" << "  " << RESET << info.procs << "\n";
     showInfo("cpu", getCPUModel());
     showInfo("gpu", getGPUModel()); 
 
