@@ -29,6 +29,7 @@ freeram = false
 
 [colors]
 logocolor = "white"
+textcolor = "blue"
 )";
     std::cout << "~ created default config: " << path << "\n";
 };
@@ -76,7 +77,12 @@ Config loadConfig(const std::string& path) {
         else if (n == "white") c.logocolor = colors::WHITE;
         else if (n == "pink")  c.logocolor = colors::PINK;
         else                   c.logocolor = colors::RESET;
-        
+        std::string g = t["colors"]["textcolor"].value_or(std::string("blue"));
+        if      (g == "blue")  c.textcolor = colors::BLUE;
+        else if (g == "green") c.textcolor = colors::GREEN;
+        else if (g == "pink")  c.textcolor = colors::PINK;
+        else if (g == "white") c.textcolor = colors::WHITE;
+        else                   c.textcolor = colors::RESET;
     } catch (const toml::parse_error& e) {
         std::cerr << "!!error_error_config_error!!: " << e.description() << "\n";
     }

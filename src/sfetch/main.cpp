@@ -18,7 +18,7 @@ std::string currentTime() {
     return buf;
 }
 
-// TODO 1. Fix logo #DONE, 2. Transfer colors to color #DONE 3. make config system with toml #ALMOST 4. logos #Will make
+// TODO  2. make color system that interact with fetch 3. make config system with toml #ALMOST 4. logos #Will make
 std::string readFile(const std::string& path) {
     std::ifstream file(path);
     if (!file.is_open()) return "";
@@ -100,8 +100,8 @@ std::string humanUptime(long seconds) {
     return buf;
 }
 
-void showplan9Logo() {
-    std::cout << colors::GREEN
+void showplan9Logo(const std::string& color = colors::GREEN) {
+    std::cout << color
               << "    (\\(\\\n"
               << "   j\". ..\n"
               << "  (  . .)\n"
@@ -111,8 +111,8 @@ void showplan9Logo() {
               << colors::RESET;
 }
 
-void showInfo(const std::string& key, const std::string& value) {
-    std::cout << colors::BLUE << key << colors::RESET << "  " << value << "\n";
+void showInfo(const std::string& key, const std::string& value, const std::string& color = colors::BLUE) {
+    std::cout << color << key << colors::RESET << "  " << value << "\n";
 }
 
 int main() {
@@ -130,29 +130,29 @@ int main() {
     char hostname[256];
     gethostname(hostname, sizeof hostname);
     if (cfg.logo) {
-    showplan9Logo();
+    showplan9Logo(cfg.logocolor);
     } std::cout << colors::BOLD << hostname << "@" << un.sysname << colors::RESET << "\n";
     if (cfg.line) {
     std::cout << "=-=-=-=-=-=-=-=\n";
     } if (cfg.os) {
-    showInfo("os", getDistro());
+    showInfo("os", getDistro(), cfg.textcolor);
     } if(cfg.kernel) {
-    showInfo("kernel", std::string(un.release));
+    showInfo("kernel", std::string(un.release), cfg.textcolor);
     } if (cfg.uptime) {
-    showInfo("uptime", humanUptime(info.uptime));
+    showInfo("uptime", humanUptime(info.uptime), cfg.textcolor);
     } if (cfg.usedram) {
     showInfo("ram", humanBytes(info.totalram - info.freeram)
-                + " / " + humanBytes(info.totalram));
+                + " / " + humanBytes(info.totalram), cfg.textcolor);
     } if (cfg.fullram) {
-    showInfo("totalram", humanBytes(info.totalram));
+    showInfo("totalram", humanBytes(info.totalram), cfg.textcolor);
     } if (cfg.procs) {
-    std::cout << colors::BLUE << "procs" << "  " << colors::RESET << info.procs << "\n";
+    std::cout << cfg.textcolor<< "procs" << "  " << colors::RESET << info.procs << "\n";
     } if (cfg.cpu) {
-    showInfo("cpu", getCPUModel());
+    showInfo("cpu", getCPUModel(), cfg.textcolor);
     } if (cfg.gpu){
-    showInfo("gpu", getGPUModel());
+    showInfo("gpu", getGPUModel(), cfg.textcolor);
     } if (cfg.lastrun && !cfg.lastrunstr.empty()) {
-      std::cout << colors::BLUE << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n"; 
+      std::cout << cfg.textcolor << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n"; 
     }
     try {
         toml::table t = toml::parse_file(path);             

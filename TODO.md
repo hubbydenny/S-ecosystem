@@ -5,9 +5,9 @@
 - [x] Logo colors from color.h
 
 ## In progress
-- [ ] `create_directories(parent_path())` in ensureConfig
-- [ ] Port config to scat
+- [x] `create_directories(parent_path())` in ensureConfig
 - [ ] `--config` flag
+- [ ] color system that interract with fetch
 
 ## Later
 - [ ] Selectable logos
