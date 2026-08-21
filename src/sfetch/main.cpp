@@ -347,6 +347,12 @@ static size_t visWidth(const std::string& s) {
     size_t w = 0;
     for (size_t i = 0; i < s.size(); i++) {
         if (s[i] == '\033') { while (i < s.size() && s[i] != 'm') i++; continue; }
+        if ((unsigned char)s[i] == 0xE2 && i + 2 < s.size() &&
+            (unsigned char)s[i+1] == 0x96 && (unsigned char)s[i+2] == 0x88) {
+            w += 2;
+            i += 2;
+            continue;
+        }
         if ((unsigned char)s[i] >= 0xC0) continue;
         w++;
     }
