@@ -534,6 +534,24 @@ int main() {
     showInfo("cpu", getCPUModel(), cfg.textcolor);
     } if (cfg.gpu){
     showInfo("gpu", getGPUModel(), cfg.textcolor);
+    } if (cfg.shell) {
+    showInfo("shell", getShell(), cfg.textcolor);
+    } if (cfg.terminal) {
+    showInfo("terminal", getTerminal(), cfg.textcolor);
+    } if (cfg.resolution) {
+    showInfo("resolution", getResolution(), cfg.textcolor);
+    } if (cfg.packages) {
+    showInfo("packages", getPackages(), cfg.textcolor);
+    } if (cfg.de) {
+    showInfo("de", getDE(), cfg.textcolor);
+    } if (cfg.wm) {
+    showInfo("wm", getWM(), cfg.textcolor);
+    } if (cfg.init) {
+    showInfo("init", getInit(), cfg.textcolor);
+    } if (cfg.arch) {
+    showInfo("arch", getArchitecture(), cfg.textcolor);
+    } if (cfg.disk) {
+    showInfo("disk", GetDiskInfo(), cfg.textcolor);
     } if (cfg.lastrun && !cfg.lastrunstr.empty()) {
       std::cout << cfg.textcolor << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n"; 
     }

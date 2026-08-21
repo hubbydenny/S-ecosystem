@@ -27,6 +27,15 @@ lastrun = true
 fullram = false
 freeram = false
 blocks = false
+shell = true
+terminal = true
+resolution = true
+disk = true
+packages = true
+de = true
+wm = true
+init = true
+arch = true
 
 [colors]
 logocolor = "white"
@@ -48,6 +57,15 @@ bool fullram = false;
 bool freeram = false;
 bool lastrun = true;
 bool blocks = false;
+bool shell = true;
+bool terminal = true;
+bool resolution = true;
+bool disk = true;
+bool packages = true;
+bool de = true;
+bool wm = true;
+bool init = true;
+bool arch = true;
 std::string textcolor = colors::BLUE;
 std::string logocolor = colors::RESET;
 std::string lastrunstr;
@@ -72,6 +90,15 @@ Config loadConfig(const std::string& path) {
         c.line    = t["setup"]["line"].value_or(c.line);
         c.lastrun = t["setup"]["lastrun"].value_or(c.lastrun);
         c.blocks = t["setup"]["blocks"].value_or(c.blocks);
+        c.shell = t["setup"]["shell"].value_or(c.shell);
+        c.terminal = t["setup"]["terminal"].value_or(c.terminal);
+        c.resolution = t["setup"]["resolution"].value_or(c.resolution);
+        c.disk = t["setup"]["disk"].value_or(c.disk);
+        c.packages = t["setup"]["packages"].value_or(c.packages);
+        c.de = t["setup"]["de"].value_or(c.de);
+        c.wm = t["setup"]["wm"].value_or(c.wm);
+        c.init = t["setup"]["init"].value_or(c.init);
+        c.arch = t["setup"]["arch"].value_or(c.arch);
         c.lastrunstr = t["state"]["lastrun"].value_or(c.lastrunstr);
 
         std::string n = t["colors"]["logocolor"].value_or(std::string("white"));
