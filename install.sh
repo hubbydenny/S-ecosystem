@@ -10,9 +10,7 @@ if [ "$(id -u)" -ne 0 ]; then
     exec sudo "$0" "$@"
 fi
 
-echo "========================================="
 echo "  S-ecosystem Installer"
-echo "========================================="
 echo ""
 
 cd "$ROOT"
@@ -35,9 +33,7 @@ for bin in sfetch scat sls; do
 done
 
 echo ""
-echo "========================================="
 echo "  Installed: ${Installed[*]}"
-echo "========================================="
 echo ""
 for bin in "${Installed[@]}"; do
     echo "  Run: $bin"
