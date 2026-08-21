@@ -343,31 +343,27 @@ void showplan9Logo(const std::string& color = colors::GREEN) {
               << colors::RESET;
 };
 
-static std::vector<std::string> parseLogoArt(const std::string& art, const std::string(&palette)[5], const std::string& def) {
+static std::vector<std::string> parseLogoArt(const std::string& art) {
     std::vector<std::string> lines;
     std::istringstream ss(art);
     std::string raw;
     while (std::getline(ss, raw)) {
         std::string line;
-        std::string cur = def;
         for (size_t i = 0; i < raw.size(); i++) {
             if (raw[i] == '$' && i + 1 < raw.size() && raw[i + 1] >= '1' && raw[i + 1] <= '4') {
-                cur = palette[raw[i + 1] - '0'];
                 i++;
             } else if (raw[i] == ' ') {
                 line += "  ";
             } else {
-                line += cur + "██" + "\033[0m";
+                line += "██";
             }
         }
-        lines.push_back("  " + line);
+        lines.push_back(line);
     }
     return lines;
 }
 
 std::vector<std::string> getDifferentLogoLines(const std::string& logoName) {
-    std::string def;
-
     if (logoName == "kiss" || logoName == "Kiss") {
         const std::string R  = "\033[38;2;255;0;0m██";       
         const std::string W  = "\033[38;2;255;255;255m██";   
@@ -403,9 +399,7 @@ R"(
  / /     \ \
          \
 )";
-        std::string palette[5] = {};
-        def = "\033[38;2;13;183;216m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "alpine2") {
         std::string art =
@@ -417,10 +411,7 @@ $1   /\ /\
 $2//      $1\  \
          \
 )";
-        std::string palette[5] = {};
-        palette[1] = "\033[38;2;255;255;255m";
-        palette[2] = "\033[38;2;13;183;216m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "arch") {
         std::string art =
@@ -433,10 +424,7 @@ $2  /   ,,   \
  /   |  |   \
 /_-''    ''-_\
 )";
-        std::string palette[5] = {};
-        palette[2] = "\033[38;2;23;147;209m";
-        def = "\033[38;2;23;147;209m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "artix") {
         std::string art =
@@ -455,9 +443,7 @@ R"(
  'io'`             `'oo'
 '`                     `'
 )";
-        std::string palette[5] = {};
-        def = "\033[38;2;116;194;210m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "artix2") {
         std::string art =
@@ -470,9 +456,7 @@ R"(
  /   ,.'`.  \
 /.,'`     `'.\
 )";
-        std::string palette[5] = {};
-        def = "\033[38;2;116;194;210m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "bedrock") {
         std::string art =
@@ -484,10 +468,7 @@ _________
 | $2  \___/$1 |
 |_________|
 )";
-        std::string palette[5] = {};
-        palette[1] = "\033[38;2;255;255;255m";
-        palette[2] = "\033[38;2;90;90;90m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "chimera") {
         std::string art =
@@ -500,12 +481,7 @@ $2XX $1`t...f' $4jj
 $2XXX. $1`"' $4.XXX
 $2OOOOOC $4lXXXXX
 )";
-        std::string palette[5] = {};
-        palette[1] = "\033[38;2;255;255;255m";
-        palette[2] = "\033[38;2;15;52;96m";
-        palette[3] = "\033[38;2;215;0;65m";
-        palette[4] = "\033[38;2;47;197;92m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "chimera2") {
         std::string art =
@@ -526,11 +502,7 @@ $3888888888888bo  od888888888888
 $388888888888888  88888888888888
 $388888888888888  88888888888888
 )";
-        std::string palette[5] = {};
-        palette[1] = "\033[38;2;215;0;65m";
-        palette[2] = "\033[38;2;15;52;96m";
-        palette[3] = "\033[38;2;255;255;255m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "debian") {
         std::string art =
@@ -542,9 +514,7 @@ R"(
 -_
   --_
 )";
-        std::string palette[5] = {};
-        def = "\033[38;2;215;0;65m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "exherbo") {
         std::string art =
@@ -572,12 +542,7 @@ KX  '0XdKMMK;.xMMMk, .0MMMMMXx;  ...
              ':d0XWMMMMWNNNNMMMNOl'
                    ':okKXWNKkl'
 )";
-        std::string palette[5] = {};
-        palette[1] = "\033[38;2;255;100;0m";
-        palette[2] = "\033[38;2;255;255;255m";
-        palette[3] = "\033[38;2;140;140;140m";
-        def = "\033[38;2;255;100;0m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "gentoo") {
         std::string art =
@@ -590,10 +555,7 @@ R"(
 (     _-
 \____-
 )";
-        std::string palette[5] = {};
-        palette[2] = "\033[38;2;150;72;210m";
-        def = "\033[38;2;150;72;210m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "gnu") {
         std::string art =
@@ -617,9 +579,7 @@ R"(
                  '/'/'
                   `;
 )";
-        std::string palette[5] = {};
-        def = "\033[38;2;90;90;90m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "guix") {
         std::string art =
@@ -635,9 +595,7 @@ R"(
               :+/:::-
               `-....`
 )";
-        std::string palette[5] = {};
-        def = "\033[38;2;100;50;200m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "haiku") {
         std::string art =
@@ -651,9 +609,7 @@ R"(
  '-.__.   .__.-'
        |_|
 )";
-        std::string palette[5] = {};
-        def = "\033[38;2;215;183;0m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "parabola") {
         std::string art =
@@ -675,9 +631,7 @@ R"(
                        //`
                       -.
 )";
-        std::string palette[5] = {};
-        def = "\033[38;2;90;135;255m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "raspbian") {
         std::string art =
@@ -706,10 +660,7 @@ R"(
             .::::::::::
              `.-::::-`
 )";
-        std::string palette[5] = {};
-        palette[1] = "\033[38;2;47;197;92m";
-        palette[2] = "\033[38;2;190;30;30m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "uwuntu") {
         std::string art =
@@ -735,12 +686,7 @@ R"(
 $2&%.      %%%$1
   $2%%%%%%%
 )";
-        std::string palette[5] = {};
-        palette[1] = "\033[38;2;255;220;0m";
-        palette[2] = "\033[38;2;47;197;92m";
-        palette[3] = "\033[38;2;0;200;255m";
-        def = "\033[38;2;255;220;0m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "void") {
         std::string art =
@@ -753,11 +699,7 @@ R"(
 | \______ \_|
  -_______\
 )";
-        std::string palette[5] = {};
-        palette[1] = "\033[38;2;47;197;92m";
-        palette[2] = "\033[38;2;47;197;92m";
-        def = "\033[38;2;47;197;92m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     if (logoName == "unknown") {
         std::string art =
@@ -781,9 +723,7 @@ d###P            N####p
         q###r
          ""
 )";
-        std::string palette[5] = {};
-        def = "\033[38;2;180;180;180m";
-        return parseLogoArt(art, palette, def);
+        return parseLogoArt(art);
     }
     return {};
 }
@@ -792,7 +732,7 @@ void showLogo(const std::string& color, const std::string& logoName) {
     auto lines = getDifferentLogoLines(logoName);
     if (!lines.empty()) {
         for (const auto& l : lines)
-            std::cout << l << "\n";
+            std::cout << color << l << colors::RESET << "\n";
     } else {
         showplan9Logo(color);
     }
@@ -846,29 +786,95 @@ int main(int argc, char* argv[]) {
         else if (dl.find("void") != std::string::npos)     logoName = "void";
     }
 
-    if (cfg.logo) showLogo(cfg.logocolor, logoName);
+    bool useSideBySide = cfg.logo && !logoName.empty() && getDifferentLogoLines(logoName).size() > 0;
 
-    std::cout << colors::BOLD << hostname << "@" << un.sysname << colors::RESET << "\n";
-    if (cfg.line) std::cout << "=-=-=-=-=-=-=-=\n";
-    if (cfg.os)         showInfo("os", distro + " " + getArchitecture(), cfg.textcolor);
-    if (cfg.kernel)     showInfo("kernel", std::string(un.release), cfg.textcolor);
-    if (cfg.uptime)     showInfo("uptime", humanUptime(info.uptime), cfg.textcolor);
-    if (cfg.usedram)    showInfo("ram", humanBytes(info.totalram - info.freeram) + " / " + humanBytes(info.totalram), cfg.textcolor);
-    if (cfg.fullram)    showInfo("totalram", humanBytes(info.totalram), cfg.textcolor);
-    if (cfg.procs)      std::cout << cfg.textcolor << "procs" << "  " << colors::RESET << info.procs << "\n";
-    if (cfg.cpu)        showInfo("cpu", getCPUModel(), cfg.textcolor);
-    if (cfg.gpu)        showInfo("gpu", getGPUModel(), cfg.textcolor);
-    if (cfg.shell)      showInfo("shell", getShell(), cfg.textcolor);
-    if (cfg.terminal)   showInfo("terminal", getTerminal(), cfg.textcolor);
-    if (cfg.resolution) showInfo("resolution", getResolution(), cfg.textcolor);
-    if (cfg.packages)   showInfo("packages", getPackages(), cfg.textcolor);
-    if (cfg.de)         showInfo("de", getDE(), cfg.textcolor);
-    if (cfg.wm)         showInfo("wm", getWM(), cfg.textcolor);
-    if (cfg.init)       showInfo("init", getInit(), cfg.textcolor);
-    if (cfg.disk)       showInfo("disk", GetDiskInfo(), cfg.textcolor);
-    if (cfg.lastrun && !cfg.lastrunstr.empty())
-        std::cout << cfg.textcolor << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n";
-    if (cfg.blocks) printBlocks();
+    if (useSideBySide) {
+        auto logoLines = getDifferentLogoLines(logoName);
+
+        std::vector<std::string> infoLines;
+        auto addInfo = [&](const std::string& key, const std::string& val) {
+            infoLines.push_back(cfg.textcolor + key + colors::RESET + "  " + val);
+        };
+
+        infoLines.push_back(colors::BOLD + std::string(hostname) + "@" + un.sysname + colors::RESET);
+        if (cfg.line) infoLines.push_back("=-=-=-=-=-=-=-=");
+        if (cfg.os)         addInfo("os", distro + " " + getArchitecture());
+        if (cfg.kernel)     addInfo("kernel", std::string(un.release));
+        if (cfg.uptime)     addInfo("uptime", humanUptime(info.uptime));
+        if (cfg.usedram)    addInfo("ram", humanBytes(info.totalram - info.freeram) + " / " + humanBytes(info.totalram));
+        if (cfg.fullram)    addInfo("totalram", humanBytes(info.totalram));
+        if (cfg.procs)      infoLines.push_back(cfg.textcolor + std::string("procs") + "  " + colors::RESET + std::to_string(info.procs));
+        if (cfg.cpu)        addInfo("cpu", getCPUModel());
+        if (cfg.gpu)        addInfo("gpu", getGPUModel());
+        if (cfg.shell)      addInfo("shell", getShell());
+        if (cfg.terminal)   addInfo("terminal", getTerminal());
+        if (cfg.resolution) addInfo("resolution", getResolution());
+        if (cfg.packages)   addInfo("packages", getPackages());
+        if (cfg.de)         addInfo("de", getDE());
+        if (cfg.wm)         addInfo("wm", getWM());
+        if (cfg.init)       addInfo("init", getInit());
+        if (cfg.disk)       addInfo("disk", GetDiskInfo());
+        if (cfg.lastrun && !cfg.lastrunstr.empty())
+            infoLines.push_back(cfg.textcolor + std::string("lastrun") + "  " + colors::RESET + cfg.lastrunstr);
+
+        size_t maxLogo = logoLines.size();
+        size_t maxInfo = infoLines.size();
+        size_t rows = maxLogo > maxInfo ? maxLogo : maxInfo;
+
+        size_t maxLogoWidth = 0;
+        for (const auto& l : logoLines) {
+            size_t vis = 0;
+            for (size_t i = 0; i < l.size(); i++) {
+                if ((unsigned char)l[i] >= 0xC0) continue;
+                if (l[i] == '\033') { while (i < l.size() && l[i] != 'm') i++; continue; }
+                vis++;
+            }
+            if (vis > maxLogoWidth) maxLogoWidth = vis;
+        }
+        if (maxLogoWidth < 20) maxLogoWidth = 20;
+
+        for (size_t i = 0; i < rows; i++) {
+            if (i < maxLogo) {
+                std::cout << cfg.logocolor << logoLines[i] << colors::RESET;
+                size_t vis = 0;
+                for (size_t j = 0; j < logoLines[i].size(); j++) {
+                    if ((unsigned char)logoLines[i][j] >= 0xC0) continue;
+                    if (logoLines[i][j] == '\033') { while (j < logoLines[i].size() && logoLines[i][j] != 'm') j++; continue; }
+                    vis++;
+                }
+                if (vis < maxLogoWidth) std::cout << std::string(maxLogoWidth - vis, ' ');
+            } else {
+                std::cout << std::string(maxLogoWidth, ' ');
+            }
+            std::cout << "  ";
+            if (i < maxInfo) std::cout << infoLines[i];
+            std::cout << "\n";
+        }
+        if (cfg.blocks) printBlocks(std::string(maxLogoWidth + 2, ' '));
+    } else {
+        if (cfg.logo) showLogo(cfg.logocolor, logoName);
+        std::cout << colors::BOLD << hostname << "@" << un.sysname << colors::RESET << "\n";
+        if (cfg.line) std::cout << "=-=-=-=-=-=-=-=\n";
+        if (cfg.os)         showInfo("os", distro + " " + getArchitecture(), cfg.textcolor);
+        if (cfg.kernel)     showInfo("kernel", std::string(un.release), cfg.textcolor);
+        if (cfg.uptime)     showInfo("uptime", humanUptime(info.uptime), cfg.textcolor);
+        if (cfg.usedram)    showInfo("ram", humanBytes(info.totalram - info.freeram) + " / " + humanBytes(info.totalram), cfg.textcolor);
+        if (cfg.fullram)    showInfo("totalram", humanBytes(info.totalram), cfg.textcolor);
+        if (cfg.procs)      std::cout << cfg.textcolor << "procs" << "  " << colors::RESET << info.procs << "\n";
+        if (cfg.cpu)        showInfo("cpu", getCPUModel(), cfg.textcolor);
+        if (cfg.gpu)        showInfo("gpu", getGPUModel(), cfg.textcolor);
+        if (cfg.shell)      showInfo("shell", getShell(), cfg.textcolor);
+        if (cfg.terminal)   showInfo("terminal", getTerminal(), cfg.textcolor);
+        if (cfg.resolution) showInfo("resolution", getResolution(), cfg.textcolor);
+        if (cfg.packages)   showInfo("packages", getPackages(), cfg.textcolor);
+        if (cfg.de)         showInfo("de", getDE(), cfg.textcolor);
+        if (cfg.wm)         showInfo("wm", getWM(), cfg.textcolor);
+        if (cfg.init)       showInfo("init", getInit(), cfg.textcolor);
+        if (cfg.disk)       showInfo("disk", GetDiskInfo(), cfg.textcolor);
+        if (cfg.lastrun && !cfg.lastrunstr.empty())
+            std::cout << cfg.textcolor << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n";
+        if (cfg.blocks) printBlocks();
+    }
 
     try {
         toml::table t = toml::parse_file(path);             
