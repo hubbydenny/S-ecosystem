@@ -5,6 +5,7 @@ scat
 fastfetch
 a.out
 *.sh
+!installers/*.sh
 build/
 cmake-build-*/
 CMakeCache.txt
