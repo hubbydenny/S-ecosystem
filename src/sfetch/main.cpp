@@ -745,7 +745,91 @@ R"(
 )";
         return parseLogoArt(art);
     }
-    if (logoName == "raspbian") {
+    if (logoName == "devuan" || logoName == "Devuan") {
+        std::string art = 
+R"(
+ ..:::.
+     ..-==-
+        .+#:    
+         =@@    
+      :+%@#:    
+.:=+#@@%*:      
+#@@@#=:
+)";
+       return parseLogoArt(art);
+}
+    if (logoName == "fedora" || logoName == "fedora") {
+       std::string art =
+R"(
+        ,'''''.  
+       |   ,.  | 
+       |  |  '_' 
+  ,....|  |..   
+.'  ,_;|   ..'   
+|  |   |  |      
+|  ',_,'  |      
+ '.     ,'       
+   '''''         "
+)"; return parseLogoArt(art);
+  }
+if (logoName == "ubuntu" || logoName == "Ubuntu") {
+      std::string art =
+R"(
+  
+         _    
+     ---(_)   
+ _/  ---  \\   
+(_) |   |  |  
+  \\  --- _/   
+    ---(_)   
+)";
+  return parseLogoArt(art);
+  }
+if (logoName == "Derive" || logoName == "Derive") {
+      std::string art =
+R"(
+
+                  _____________
+                 / ..########..\
+              /.##-############.\
+            /.#####DERIVE!!1!####.\
+            |#...##..+...######.#.#.\
+            \.#..##.#++.+.#####..#.|
+           /.#......###.#..+#-.###./
+           \.#+.##############.___/
+                  #..#
+                  /_/
+
+              ..##..##.##.+
+            .#..#.##.
+         .###.##.####+...###.
+          .##-######.....###-
+          +.######+......
+        ...######.......###.
+      .##.#..###........
+          .####.######.###.
+         .#.#############.
+          +.######.
+        .####.#########.
+        .##.+++++++
+         .+++++++.+-
+       .++++++++..
+     .-.++.++++.#.
+   .+++#++++++.##..
+   .#.####..#####..
+  -#.#.++
+ .+#+#+#+.-+
+-++-+++#-.+.
+ #++-++++.#+
++###++#+.+#.
++######.
++###..######+.
+  ........
+
+)";
+  return parseLogoArt(art);
+  }
+  if (logoName == "raspbian" || logoName == "Raspbian" || logoName == "Raspberry" || logoName == "raspberry" || logoName == "Raspberry Pi OS") {
         std::string art =
 R"(
    $2`.::///+:/-.        --///+//-:`
@@ -774,7 +858,7 @@ R"(
 )";
         return parseLogoArt(art);
     }
-    if (logoName == "uwuntu") {
+    if (logoName == "uwuntu" || logoName == "Uwuntu") {
         std::string art =
 R"(
                                   &&
@@ -800,7 +884,60 @@ $2&%.      %%%$1
 )";
         return parseLogoArt(art);
     }
-    if (logoName == "void") {
+if (logoName == "Generatrix Linux" || logoName == "generatrix linux" || logoName == "generatrix") {
+       std::string art =
+R"(
+              -------------#              
+          =--------------------           
+        -------------------------+        
+       =--------------------------=       
+      ----------+        =----------      
+    @--------=*            =----------    
+    --------=                +--------    
+   @-------                    -------=   
+   =-------       -----+       --------+  
+   =-------      =-------       --------  
+   -------+       =-------      --------  
+    -------+       ------       --------  
+    +-------=      ------      +-------=  
+     ---------=     --+        --------   
+      ------------=--         =--------   
+       =-------------        --------=    
+         =-----------      ----------     
+            =--------  **-----------      
+                     ------------=        
+                     ----------=*         
+                     --------=            
+                     -----=               
+                                          
+)";
+         return parseLogoArt(art);
+  }
+    if (logoName == "small-generatrix") {
+          std::string art =
+R"(
+
+
+
+
+        ---------=        
+     ---------------+     
+    -------+--*-------    
+   -----+        ------   
+  -----            -----  
+  -----    ----    %----= 
+  ----+     ----    ----- 
+  *----=    ---*    ----= 
+   +-----=-@-+     -----  
+    =--------     -----   
+       =-----  =------    
+             -------=     
+             ------       
+             *            
+)";
+      return parseLogoArt(art);
+    } 
+    if (logoName == "void" || logoName == "Void") {
         std::string art =
 R"(
     _______
@@ -813,7 +950,7 @@ R"(
 )";
         return parseLogoArt(art);
     }
-    if (logoName == "netbsd") {
+    if (logoName == "netbsd" || logoName == "Netbsd" || logoName == "NetBsd") {
         std::string art =
 R"(
 $1                     `-/oshdmNMNdhyo+:-`
@@ -914,6 +1051,7 @@ d###P            N####p
     }
     return {};
 }
+//!!SO MUCH LOGOS FROM FASTFETCH!!
 
 void showLogo(const std::string& color, const std::string& logoName) {
     auto lines = getDifferentLogoLines(logoName);
