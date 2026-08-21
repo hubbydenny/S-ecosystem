@@ -113,7 +113,13 @@ Config loadConfig(const std::string& path) {
         else if (n == "purple") c.logocolor = colors::PURPLE;
         else if (n == "aqua") c.logocolor = colors::AQUA;
         else if (n == "magenta") c.logocolor = colors::MAGENTA;
-        else                   c.logocolor = colors::RESET;
+                else if (n == "gray1" || n == "grey1") c.logocolor = colors::GRAY_1;
+        else if (n == "gray2" || n == "grey2") c.logocolor = colors::GRAY_2;
+        else if (n == "gray3" || n == "grey3") c.logocolor = colors::GRAY_3;
+        else if (n == "gray4" || n == "grey4") c.logocolor = colors::GRAY_4;
+        else if (n == "gray5" || n == "grey5") c.logocolor = colors::GRAY_5;
+        else if (n == "gray" || n == "grey") c.logocolor = colors::GRAY_3;
+else                   c.logocolor = colors::RESET;
         std::string g = t["colors"]["textcolor"].value_or(std::string("blue"));
         if      (g == "green") c.textcolor = colors::GREEN;
         else if (g == "blue")  c.textcolor = colors::BLUE;
@@ -129,7 +135,13 @@ Config loadConfig(const std::string& path) {
         else if (g == "purple") c.textcolor = colors::PURPLE;
         else if (g == "aqua") c.textcolor = colors::AQUA;
         else if (g == "magenta") c.textcolor = colors::MAGENTA;
-        else                   c.textcolor = colors::RESET;
+                else if (g == "gray1" || g == "grey1") c.textcolor = colors::GRAY_1;
+        else if (g == "gray2" || g == "grey2") c.textcolor = colors::GRAY_2;
+        else if (g == "gray3" || g == "grey3") c.textcolor = colors::GRAY_3;
+        else if (g == "gray4" || g == "grey4") c.textcolor = colors::GRAY_4;
+        else if (g == "gray5" || g == "grey5") c.textcolor = colors::GRAY_5;
+        else if (g == "gray" || g == "grey") c.textcolor = colors::GRAY_3;
+else                   c.textcolor = colors::RESET;
     } catch (const toml::parse_error& e) {
         std::cerr << "!!error_error_config_error!!: " << e.description() << "\n";
     }
