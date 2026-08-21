@@ -2,7 +2,7 @@ Name:           s-ecosystem
 Version:        1.0.0
 Release:        1%{?dist}
 Summary:        Shell utilities: sfetch, scat, sls
-License:        MIT
+License:        GPLv3
 URL:            https://github.com/hubbydenny/S-ecosystem
 Source0:        %{url}/archive/v%{version}.tar.gz
 
