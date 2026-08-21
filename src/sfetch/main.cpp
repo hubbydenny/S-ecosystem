@@ -838,7 +838,10 @@ int main(int argc, char* argv[]) {
 
         for (size_t i = 0; i < rows; i++) {
             if (i < maxLogo) {
-                std::cout << cfg.logocolor << logoLines[i] << colors::RESET;
+                if (logoName == "kiss" || logoName == "Kiss")
+                    std::cout << logoLines[i];
+                else
+                    std::cout << cfg.logocolor << logoLines[i] << colors::RESET;
                 size_t w = visWidth(logoLines[i]);
                 if (w < maxLogoWidth) std::cout << std::string(maxLogoWidth - w, ' ');
             } else {
