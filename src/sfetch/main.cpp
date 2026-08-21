@@ -6,6 +6,7 @@
 #include <fstream>
 #include <string>
 #include <cstring>
+#include <cctype>
 #include <sys/utsname.h>
 #include <sys/sysinfo.h>
 #include <sys/statvfs.h>
@@ -39,7 +40,6 @@ std::string trim(std::string s) {
   return s;
 };
 
-// TODO  2. make color system that interact with fetch 3. make config system with toml #ALMOST 4. logos #Will make
 std::string readFile(const std::string& path) {
     std::ifstream file(path);
     if (!file.is_open()) return "";
@@ -102,7 +102,9 @@ DiskInfo getDisk(const std::string& path) {
   if (statvfs(path.c_str(), &stat) != 0) return result;
   result.total = static_cast<unsigned long long>(stat.f_blocks) * stat.f_frsize;
   result.free = static_cast<unsigned long long>(stat.f_bavail) * stat.f_frsize; 
-  return result; }
+  return result; 
+}
+
 std::string getCPUModel() {
     std::ifstream file("/proc/cpuinfo");
     std::string line;
@@ -143,6 +145,7 @@ std::string humanBytes(unsigned long long bytes) {
         std::snprintf(buf, sizeof buf, "%llu B", bytes);
     return buf;
 };
+
 std::string GetDiskInfo() {
   DiskInfo disk = getDisk("/");
   if (!disk.total) return "Unknown";
@@ -150,85 +153,51 @@ std::string GetDiskInfo() {
   int percent = static_cast<int>((used * 100.0) / disk.total);
   return humanBytes(used) + " / " + humanBytes(disk.total) + " (" + std::to_string(percent) + "%)";
 }
+
 std::string getPackages() {
   std::vector<std::pair<std::string, std::string>> managers = {
-        // Arch Linux / derivatives
         {"pacman", "pacman -Qq 2>/dev/null | wc -l"},
-
-        // Debian / Ubuntu / Mint / Pop!_OS
         {"dpkg", "dpkg-query -f '${binary:Package}\\n' -W 2>/dev/null | wc -l"},
-
-        // Fedora / RHEL / CentOS / Rocky / Alma
         {"rpm", "rpm -qa 2>/dev/null | wc -l"},
-
-        // openSUSE
         {"zypper", "rpm -qa 2>/dev/null | wc -l"},
-
-        // Alpine
         {"apk", "apk info 2>/dev/null | wc -l"},
-
-        // Gentoo
         {"equery", "equery list 2>/dev/null | wc -l"},
-
-        // Void Linux
         {"xbps-query", "xbps-query -l 2>/dev/null | wc -l"},
-
-        // Solus
         {"eopkg", "eopkg list-installed 2>/dev/null | wc -l"},
-
-        // NixOS
         {"nix-env", "nix-env -q 2>/dev/null | wc -l"}
     };
 
     std::vector<std::string> results;
 
     for (const auto& [manager, cmd] : managers) {
-      std::string check = command(
-            "command -v " + manager + " 2>/dev/null"
-        );
+      std::string check = command("command -v " + manager + " 2>/dev/null");
+      if (check.empty()) continue;
 
-        if (check.empty())
-            continue;
+      std::string count = trim(command(cmd));
+      if (count.empty() || count == "0") continue;
 
-        std::string count = trim(command(cmd));
-
-        if (count.empty() || count == "0")
-            continue;
-
-        results.push_back(count + " (" + manager + ")");
+      results.push_back(count + " (" + manager + ")");
     }
 
-    // Flatpak
-    std::string flatpak = trim(command(
-        "flatpak list 2>/dev/null | tail -n +1 | wc -l"
-    ));
-
-    // Snap
-    std::string snap = trim(command(
-        "snap list 2>/dev/null | tail -n +2 | wc -l"
-    ));
+    std::string flatpak = trim(command("flatpak list 2>/dev/null | tail -n +1 | wc -l"));
+    std::string snap = trim(command("snap list 2>/dev/null | tail -n +2 | wc -l"));
 
     std::string result;
-
-    if (!results.empty())
-        result = results[0];
+    if (!results.empty()) result = results[0];
 
     if (!flatpak.empty() && flatpak != "0") {
-        if (!result.empty())
-            result += ", ";
-
+        if (!result.empty()) result += ", ";
         result += flatpak + " (flatpak)";
     }
 
     if (!snap.empty() && snap != "0") {
-        if (!result.empty())
-            result += ", ";
-
+        if (!result.empty()) result += ", ";
         result += snap + " (snap)";
     }
 
     return result.empty() ? "Unknown" : result;
 }
+
 std::string getDE() {
     const char* vars[] = {
         "XDG_CURRENT_DESKTOP",
@@ -239,242 +208,111 @@ std::string getDE() {
     std::string de;
     for (const char* var : vars) {
         const char* value = getenv(var);
-
         if (value && strlen(value)) {
             de = value;
             break;
         }
     }
 
-    if (de.empty())
-        return "Unknown";
+    if (de.empty()) return "Unknown";
 
-    // KDE Plasma
-    if (de.find("KDE") != std::string::npos ||
-        de.find("kde") != std::string::npos ||
-        de.find("PLASMA") != std::string::npos ||
-        de.find("plasma") != std::string::npos)
+    if (de.find("KDE") != std::string::npos || de.find("kde") != std::string::npos ||
+        de.find("PLASMA") != std::string::npos || de.find("plasma") != std::string::npos)
         return "KDE Plasma";
-
-    // GNOME
-    if (de.find("GNOME") != std::string::npos ||
-        de.find("gnome") != std::string::npos)
-        return "GNOME";
-
-    // XFCE
-    if (de.find("XFCE") != std::string::npos ||
-        de.find("xfce") != std::string::npos)
-        return "Xfce";
-
-    // Cinnamon
-    if (de.find("Cinnamon") != std::string::npos ||
-        de.find("cinnamon") != std::string::npos)
-        return "Cinnamon";
-
-    // MATE
-    if (de.find("MATE") != std::string::npos ||
-        de.find("mate") != std::string::npos)
-        return "MATE";
-
-    // LXQt
-    if (de.find("LXQt") != std::string::npos ||
-        de.find("lxqt") != std::string::npos)
-        return "LXQt";
-
-    // LXDE
-    if (de.find("LXDE") != std::string::npos ||
-        de.find("lxde") != std::string::npos)
-        return "LXDE";
-
-    // Budgie
-    if (de.find("Budgie") != std::string::npos ||
-        de.find("budgie") != std::string::npos)
-        return "Budgie";
-
-    // Unity
-    if (de.find("Unity") != std::string::npos ||
-        de.find("unity") != std::string::npos)
-        return "Unity";
-
-    // Deepin
-    if (de.find("Deepin") != std::string::npos ||
-        de.find("deepin") != std::string::npos)
-        return "Deepin";
-
-    // Pantheon
-    if (de.find("Pantheon") != std::string::npos ||
-        de.find("pantheon") != std::string::npos)
-        return "Pantheon";
-
-    // COSMIC
-    if (de.find("COSMIC") != std::string::npos ||
-        de.find("cosmic") != std::string::npos)
-        return "COSMIC";
+    if (de.find("GNOME") != std::string::npos || de.find("gnome") != std::string::npos) return "GNOME";
+    if (de.find("XFCE") != std::string::npos || de.find("xfce") != std::string::npos) return "Xfce";
+    if (de.find("Cinnamon") != std::string::npos || de.find("cinnamon") != std::string::npos) return "Cinnamon";
+    if (de.find("MATE") != std::string::npos || de.find("mate") != std::string::npos) return "MATE";
+    if (de.find("LXQt") != std::string::npos || de.find("lxqt") != std::string::npos) return "LXQt";
+    if (de.find("LXDE") != std::string::npos || de.find("lxde") != std::string::npos) return "LXDE";
+    if (de.find("Budgie") != std::string::npos || de.find("budgie") != std::string::npos) return "Budgie";
+    if (de.find("Unity") != std::string::npos || de.find("unity") != std::string::npos) return "Unity";
+    if (de.find("Deepin") != std::string::npos || de.find("deepin") != std::string::npos) return "Deepin";
+    if (de.find("Pantheon") != std::string::npos || de.find("pantheon") != std::string::npos) return "Pantheon";
+    if (de.find("COSMIC") != std::string::npos || de.find("cosmic") != std::string::npos) return "COSMIC";
 
     return de;
 }
+
 std::string getWM() { 
     const char* wayland = getenv("WAYLAND_DISPLAY");
 
     if (wayland) {
         const char* desktop = getenv("XDG_CURRENT_DESKTOP");
-
         if (desktop) {
-          std::string de = desktop;
-
-            if (de.find("KDE") != std::string::npos)
-                return "KWin";
-
-            if (de.find("GNOME") != std::string::npos)
-                return "Mutter";
-
-            if (de.find("Hyprland") != std::string::npos)
-                return "Hyprland";
-
-            if (de.find("Sway") != std::string::npos)
-                return "Sway";
-
-            if (de.find("river") != std::string::npos)
-                return "river";
-
-            if (de.find("niri") != std::string::npos)
-                return "Niri";
-
-            if (de.find("COSMIC") != std::string::npos)
-                return "COSMIC";
+            std::string de = desktop;
+            if (de.find("KDE") != std::string::npos) return "KWin";
+            if (de.find("GNOME") != std::string::npos) return "Mutter";
+            if (de.find("Hyprland") != std::string::npos) return "Hyprland";
+            if (de.find("Sway") != std::string::npos) return "Sway";
+            if (de.find("river") != std::string::npos) return "river";
+            if (de.find("niri") != std::string::npos) return "Niri";
+            if (de.find("COSMIC") != std::string::npos) return "COSMIC";
         }
-
-        // Common environment variables
-        if (getenv("HYPRLAND_INSTANCE_SIGNATURE"))
-            return "Hyprland";
-
-        if (getenv("SWAYSOCK"))
-            return "Sway";
-
-        if (getenv("RIVER_SOCKET"))
-            return "river";
-
-        if (getenv("NIRI_SOCKET"))
-            return "Niri";
+        if (getenv("HYPRLAND_INSTANCE_SIGNATURE")) return "Hyprland";
+        if (getenv("SWAYSOCK")) return "Sway";
+        if (getenv("RIVER_SOCKET")) return "river";
+        if (getenv("NIRI_SOCKET")) return "Niri";
     }
-    std::string result = trim(command(
-        "wmctrl -m 2>/dev/null | "
-        "grep '^Name:' | "
-        "cut -d ':' -f2"
-    ));
 
-    if (!result.empty())
-        return result;
+    std::string result = trim(command("wmctrl -m 2>/dev/null | grep '^Name:' | cut -d ':' -f2"));
+    if (!result.empty()) return result;
+
     const char* de = getenv("XDG_CURRENT_DESKTOP");
-
     if (de) {
-      std::string value = de;
-
-        if (value.find("XFCE") != std::string::npos)
-            return "Xfwm";
-
-        if (value.find("KDE") != std::string::npos)
-            return "KWin";
-
-        if (value.find("GNOME") != std::string::npos)
-            return "Mutter";
+        std::string value = de;
+        if (value.find("XFCE") != std::string::npos) return "Xfwm";
+        if (value.find("KDE") != std::string::npos) return "KWin";
+        if (value.find("GNOME") != std::string::npos) return "Mutter";
     }
 
     return "Unknown";
 };
 
 std::string getInit() {
-  std::string pid1 = readFirstLine("/proc/1/comm");
-
+    std::string pid1 = readFirstLine("/proc/1/comm");
     if (!pid1.empty()) {
-        if (pid1 == "systemd")
-            return "systemd";
-
-        if (pid1 == "init")
-            return "SysVinit";
-
-        if (pid1 == "openrc-init")
-            return "OpenRC";
-
-        if (pid1 == "runit")
-            return "runit";
-
-        if (pid1 == "s6-svscan")
-            return "s6";
-
-        if (pid1 == "dinit")
-            return "dinit";
-
-        if (pid1 == "busybox")
-            return "BusyBox init";
-
+        if (pid1 == "systemd") return "systemd";
+        if (pid1 == "init") return "SysVinit";
+        if (pid1 == "openrc-init") return "OpenRC";
+        if (pid1 == "runit") return "runit";
+        if (pid1 == "s6-svscan") return "s6";
+        if (pid1 == "dinit") return "dinit";
+        if (pid1 == "busybox") return "BusyBox init";
         return pid1;
     }
-    if (fs::exists("/run/systemd/system"))
-        return "systemd";
-
-    if (fs::exists("/run/openrc"))
-        return "OpenRC";
-
-    if (fs::exists("/run/runit"))
-        return "runit";
-
-    if (fs::exists("/run/s6"))
-        return "s6";
+    if (fs::exists("/run/systemd/system")) return "systemd";
+    if (fs::exists("/run/openrc")) return "OpenRC";
+    if (fs::exists("/run/runit")) return "runit";
+    if (fs::exists("/run/s6")) return "s6";
 
     return "Unknown";
 }
+
 std::string getArchitecture() {
     struct utsname info{};
-
-    if (uname(&info) != 0)
-        return "Unknown";
+    if (uname(&info) != 0) return "Unknown";
 
     std::string arch = info.machine;
-
-    if (arch == "x86_64")
-        return "x86_64";
-
-    if (arch == "aarch64" ||
-        arch == "arm64")
-        return "ARM64";
-
-    if (arch == "armv7l" ||
-        arch == "armv7")
-        return "ARMv7";
-
-    if (arch == "armv6l")
-        return "ARMv6";
-
-    if (arch == "i386" ||
-        arch == "i486" ||
-        arch == "i586" ||
-        arch == "i686")
-        return "x86";
-
-    if (arch == "riscv64")
-        return "RISC-V 64";
-
-    if (arch == "ppc64le")
-        return "PowerPC64 LE";
-
-    if (arch == "ppc64")
-        return "PowerPC64";
-
-    if (arch == "s390x")
-        return "IBM Z";
-
-    if (arch == "mips64")
-        return "MIPS64";
+    if (arch == "x86_64") return "x86_64";
+    if (arch == "aarch64" || arch == "arm64") return "ARM64";
+    if (arch == "armv7l" || arch == "armv7") return "ARMv7";
+    if (arch == "armv6l") return "ARMv6";
+    if (arch == "i386" || arch == "i486" || arch == "i586" || arch == "i686") return "x86";
+    if (arch == "riscv64") return "RISC-V 64";
+    if (arch == "ppc64le") return "PowerPC64 LE";
+    if (arch == "ppc64") return "PowerPC64";
+    if (arch == "s390x") return "IBM Z";
+    if (arch == "mips64") return "MIPS64";
 
     return arch;
 }
-void printBlocks() {
-  std::cout << "  ";
+
+void printBlocks(const std::string& indent = "  ") {
+  std::cout << indent;
   for (int i = 0; i < 8; ++i)
     std::cout << "\033[" << (40 + i) << "m" << "   ";
-  std::cout << colors::RESET << "\n";
-  std::cout << "  ";
+  std::cout << colors::RESET << "\n" << indent;
   for (int i = 0; i < 8; ++i)
     std::cout << "\033[" << (100 + i) << "m" << "   ";
   std::cout << colors::RESET << "\n";
@@ -504,48 +342,455 @@ void showplan9Logo(const std::string& color = colors::GREEN) {
               << "  c\?\".UJ\n"
               << colors::RESET;
 };
-std::vector<std::string> getDifferentLogoLines(const std::string& logoName) {
-    if (logoName == "kiss") {
-        const char* K = "\033[40m  \033[0m";
-        const char* R = "\033[41m  \033[0m";
-        const char* W = "\033[47m  \033[0m";
-        const char* P = "\033[45m  \033[0m";
 
-        std::vector<std::vector<std::string>> art = {
-            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
-            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
-            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
-            {K,K,K,K,K,K,K,R,R,R,R,R,K,K,K,R,R,R,R,R,K,K,K,K,K,K},
-            {K,K,K,K,K,R,R,R,R,R,R,R,K,R,R,R,R,R,R,R,R,K,K,K,K,K},
-            {K,K,K,K,W,W,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K},
-            {K,K,K,P,W,W,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K},
-            {K,K,W,K,W,W,R,R,W,W,W,W,W,W,W,W,W,W,W,R,R,R,R,K,K,K},
-            {K,K,W,K,K,R,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,R,R,K,K,K},
-            {K,K,K,K,R,R,R,W,W,W,W,W,W,W,W,W,W,W,W,W,W,R,R,K,K,K},
-            {K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K},
-            {K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K},
-            {K,K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K,K},
-            {K,K,K,K,K,K,K,R,R,R,R,W,W,W,W,W,R,R,R,R,K,K,K,K,K,K},
-            {K,K,K,K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K,K,K,K},
-            {K,K,K,K,K,K,K,K,K,K,R,R,R,R,R,R,R,K,K,K,K,K,K,K,K,K},
-            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K}
+static std::vector<std::string> parseLogoArt(const std::string& art, const std::string(&palette)[5], const std::string& def) {
+    std::vector<std::string> lines;
+    std::istringstream ss(art);
+    std::string raw;
+    while (std::getline(ss, raw)) {
+        std::string line;
+        std::string cur = def;
+        for (size_t i = 0; i < raw.size(); i++) {
+            if (raw[i] == '$' && i + 1 < raw.size() && raw[i + 1] >= '1' && raw[i + 1] <= '4') {
+                cur = palette[raw[i + 1] - '0'];
+                i++;
+            } else if (raw[i] == ' ') {
+                line += "  ";
+            } else {
+                line += cur + "██" + "\033[0m";
+            }
+        }
+        lines.push_back("  " + line);
+    }
+    return lines;
+}
+
+std::vector<std::string> getDifferentLogoLines(const std::string& logoName) {
+    std::string def;
+
+    if (logoName == "kiss" || logoName == "Kiss") {
+        const std::string R  = "\033[38;2;255;0;0m██";       
+        const std::string W  = "\033[38;2;255;255;255m██";   
+        const std::string P  = "\033[38;2;210;0;70m██";     
+        const std::string S  = "  ";                        
+        const std::string RS = "\033[0m";                    
+
+        const std::vector<std::string> logo = {
+            S+S+S+S+S+R+R+R+R+S+S+S+R+R+R+R+S+S+S+S+S,
+            S+S+S+W+W+R+R+R+R+R+R+R+R+R+R+R+R+S+S+S+S,
+            S+S+P+W+W+R+R+R+R+R+R+R+R+R+R+R+R+R+S+S+S,
+            S+R+W+R+R+W+W+W+W+W+W+W+W+W+W+R+R+R+R+S+S,
+            R+R+R+R+W+W+W+W+W+W+W+W+W+W+W+W+R+R+R+R+S,
+            R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+S,
+            S+R+R+R+R+R+R+W+W+W+W+W+R+R+R+R+R+R+R+S+S,
+            S+S+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+S+S+S,
+            S+S+S+S+S+R+R+R+R+R+R+R+R+R+R+S+S+S+S+S+S
         };
 
         std::vector<std::string> lines;
-        for (const auto& row : art) {
-            std::string line = "  ";
-            for (const auto& cell : row)
-                line += cell;
-            lines.push_back(line);
+        lines.reserve(logo.size());
+        for (const auto& row : logo) {
+            lines.push_back("  " + row + RS);
         }
         return lines;
+    }
+    if (logoName == "alpine") {
+        std::string art =
+R"(
+    /\ /\
+   / / \ \
+  / /   \ \
+ / /     \ \
+         \
+)";
+        std::string palette[5] = {};
+        def = "\033[38;2;13;183;216m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "alpine2") {
+        std::string art =
+R"(
+$1   /\ /\
+  /$2/ $1\  \
+ /$2//  $1\  \
+/$2//    $1\  \
+$2//      $1\  \
+         \
+)";
+        std::string palette[5] = {};
+        palette[1] = "\033[38;2;255;255;255m";
+        palette[2] = "\033[38;2;13;183;216m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "arch") {
+        std::string art =
+R"(
+      /\
+     /  \
+    /    \
+   /      \
+$2  /   ,,   \
+ /   |  |   \
+/_-''    ''-_\
+)";
+        std::string palette[5] = {};
+        palette[2] = "\033[38;2;23;147;209m";
+        def = "\033[38;2;23;147;209m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "artix") {
+        std::string art =
+R"(
+            '
+           'A'
+          'ooo'
+         'ookxo'
+         `ookxxo'
+       '.   `ooko'
+      'ooo`.   `oo'
+     'ooxxxoo`.   `'
+    'ookxxxkooo.`   .
+   'ookxxkoo'`   .'oo'
+  'ooxoo'`     .:ooxxo'
+ 'io'`             `'oo'
+'`                     `'
+)";
+        std::string palette[5] = {};
+        def = "\033[38;2;116;194;210m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "artix2") {
+        std::string art =
+R"(
+      /\
+     /  \
+    /`'.,\
+   /     ',
+  /      ,`\
+ /   ,.'`.  \
+/.,'`     `'.\
+)";
+        std::string palette[5] = {};
+        def = "\033[38;2;116;194;210m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "bedrock") {
+        std::string art =
+R"(
+_________
+| $2__     $1 |
+| $2\ \___ $1 |
+| $2 \  _ \$1 |
+| $2  \___/$1 |
+|_________|
+)";
+        std::string palette[5] = {};
+        palette[1] = "\033[38;2;255;255;255m";
+        palette[2] = "\033[38;2;90;90;90m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "chimera") {
+        std::string art =
+R"(
+$3XXXXX $1I:
+$3XXX' $1,I;
+$3XX $1,f""'.,,,,
+$2,, $1I:   ;P"""
+$2XX $1`t...f' $4jj
+$2XXX. $1`"' $4.XXX
+$2OOOOOC $4lXXXXX
+)";
+        std::string palette[5] = {};
+        palette[1] = "\033[38;2;255;255;255m";
+        palette[2] = "\033[38;2;15;52;96m";
+        palette[3] = "\033[38;2;215;0;65m";
+        palette[4] = "\033[38;2;47;197;92m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "chimera2") {
+        std::string art =
+R"(
+888888888888  $2888
+$1888888888888  $2888
+$1888888888888  $2888
+$188888888P"' $2_,888
+$1888888P' $2,jd88888
+$188888P  $2d88P'
+$18888b  $2j88'         xxxxxxxxxx
+$3_____  $218{          8888888888
+$38888b. $2l88,        ,88" $3______
+$3888888  $218b,_    ,d88P  $3888888
+$3888888b. $2`188bwwd88P' $3,d888888
+$388888888b._ $2`"^^"'`$3.,d88888888
+$3888888888888bo  od888888888888
+$388888888888888  88888888888888
+$388888888888888  88888888888888
+)";
+        std::string palette[5] = {};
+        palette[1] = "\033[38;2;215;0;65m";
+        palette[2] = "\033[38;2;15;52;96m";
+        palette[3] = "\033[38;2;255;255;255m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "debian") {
+        std::string art =
+R"(
+  _____
+ /  __ \
+|  /    |
+|  \___-
+-_
+  --_
+)";
+        std::string palette[5] = {};
+        def = "\033[38;2;215;0;65m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "exherbo") {
+        std::string art =
+R"(
+$2 ,
+OXo.
+NXdX0:    .cok0KXNNXXK0ko:.
+KX  '0XdKMMK;.xMMMk, .0MMMMMXx;  ...
+'NO..xWkMMx   kMMM    cMMMMMX,NMWOxOXd.
+  cNMk  NK    .oXM.   OMMMMO. 0MMNo  kW.
+  lMc   o:       .,   .oKNk;   ;NMMWlxW'
+ ;Mc    ..   .,,'    .0M$1g;$2WMN'dWMMMMMMO
+ XX        ,WMMMMW.  cM$1cfli$2WMKlo.   .kMk
+.Mo        .WM$1GD$2MW.   XM$1WO0$2MMk        oMl
+,M:         ,XMMWx::,''oOK0x;          NM.
+'Ml      ,kNKOxxxxxkkO0XXKOd:.         oMk
+ NK    .0Nxc$3:::::::::::::::$2fkKNk,      .MW
+ ,Mo  .NXc$3::$2qXWXb$3::::::::::$2oo$3::$2lNK.    .MW
+  ;Wo oMd$3:::$2oNMNP$3::::::::$2oWMMMx$3:$2c0M;   lMO
+   'NO;W0c$3:::::::::::::::$2dMMMMO$3::$2lMk  .WM'
+     xWONXdc$3::::::::::::::$2oOOo$3::$2lXN. ,WMd
+      'KWWNXXK0Okxxo,$3:::::::$2,lkKNo  xMMO
+        :XMNxl,';:lodxkOO000Oxc. .oWMMo
+          'dXMMXkl;,.        .,o0MMNo'
+             ':d0XWMMMMWNNNNMMMNOl'
+                   ':okKXWNKkl'
+)";
+        std::string palette[5] = {};
+        palette[1] = "\033[38;2;255;100;0m";
+        palette[2] = "\033[38;2;255;255;255m";
+        palette[3] = "\033[38;2;140;140;140m";
+        def = "\033[38;2;255;100;0m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "gentoo") {
+        std::string art =
+R"(
+ _-----_
+(       \
+\    0   \
+ $2\        )
+ /      _/
+(     _-
+\____-
+)";
+        std::string palette[5] = {};
+        palette[2] = "\033[38;2;150;72;210m";
+        def = "\033[38;2;150;72;210m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "gnu") {
+        std::string art =
+R"(
+    _-`````-,           ,- '- .
+  .'   .- - |          | - -.  `.
+ /.'  /                     `.   \
+:/   :      _...   ..._      ``   :
+::   :     /._ .`:'_.._\.    ||   :
+::    `._ ./  ,`  :    \ . _.''   .
+`:.      /   |  -.  \-. \\_      /
+  \:._ _/  .'   .@)  \@) ` `\ ,.'
+     _/,--'       .- .\,-.`--`.
+       ,'/''     (( \ `  )
+        /'/'  \    `-'  (
+         '/''  `._,-----'
+          ''/'    .,---'
+           ''/'      ;:
+             ''/''  ''/
+               ''/''/''
+                 '/'/'
+                  `;
+)";
+        std::string palette[5] = {};
+        def = "\033[38;2;90;90;90m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "guix") {
+        std::string art =
+R"(
+ ..                             `.
+ `--..```..`           `..```..--`
+   .-:///-:::.       `-:::///:-.
+      ````.:::`     `:::.````
+           -//:`    -::-
+            ://:   -::-
+            `///- .:::`
+             -+++-:::.
+              :+/:::-
+              `-....`
+)";
+        std::string palette[5] = {};
+        def = "\033[38;2;100;50;200m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "haiku") {
+        std::string art =
+R"(
+       ,^,
+      /   \
+*--_ ;     ; _--*
+\   '"     "'   /
+ '.           .'
+.-'"         "'-.
+ '-.__.   .__.-'
+       |_|
+)";
+        std::string palette[5] = {};
+        def = "\033[38;2;215;183;0m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "parabola") {
+        std::string art =
+R"(
+                          `.-.    `.
+                   `.`  `:++.   `-+o+.
+             `` `:+/. `:+/.   `-+oooo+
+        ``-::-.:+/. `:+/.   `-+oooooo+
+    `.-:///-  ..`   .-.   `-+oooooooo-
+ `..-..`                 `+ooooooooo:
+``                        :oooooooo/
+                          `ooooooo:
+                          `oooooo:
+                          -oooo+.
+                          +ooo/`
+                         -ooo-
+                        `+o/.
+                        /+-
+                       //`
+                      -.
+)";
+        std::string palette[5] = {};
+        def = "\033[38;2;90;135;255m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "raspbian") {
+        std::string art =
+R"(
+   $2`.::///+:/-.        --///+//-:`
+ `+oooooooooooo:   `+oooooooooooo:
+  /oooo++//ooooo:  ooooo+//+ooooo.
+  `+ooooooo:-:oo-  +o+::/ooooooo:
+   `:oooooooo+``    `.oooooooo+-
+     `:++ooo/.        :+ooo+/.`$1
+        ...`  `.----.` ``..
+     .::::-``:::::::::.`-:::-`
+    -:::-`   .:::::::-`  `-:::-
+   `::.  `.--.`  `` `.---.``.::`
+       .::::::::`  -::::::::` `
+ .::` .:::::::::- `::::::::::``::.
+-:::` ::::::::::.  ::::::::::.`:::-
+::::  -::::::::.   `-::::::::  ::::
+-::-   .-:::-.``....``.-::-.   -::-
+ .. ``       .::::::::.     `..`..
+   -:::-`   -::::::::::`  .:::::`
+   :::::::` -::::::::::` :::::::.
+   .:::::::  -::::::::. ::::::::
+    `-:::::`   ..--.`   ::::::.
+      `...`  `...--..`  `...`
+            .::::::::::
+             `.-::::-`
+)";
+        std::string palette[5] = {};
+        palette[1] = "\033[38;2;47;197;92m";
+        palette[2] = "\033[38;2;190;30;30m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "uwuntu") {
+        std::string art =
+R"(
+                                  &&
+                               &&&&&&&&
+   ,                  *&&&&&&  &&&&&&&&(
+    &%%%%&&&&     &&&&&&&&&&&&  ,&&&&&
+     %%$2%%%%&&$1&&&   ,&&&&&&&&&&&&&,   %&&&$&&&%%$%%%.
+     &%%%$2%&&&&&$1&&#   &,       &&&&&&$2&&&&&&&%%%$1%%
+      &%%&&$2&&&&$1&&&(               &&&$2&&&&&&%$1%%%
+       &&&&&$2&&&$1&%                  *&&$2&&&&&$1&&%
+    &&&/  &&&&$3\$1&                    ,$3/$1*.**
+ %&&&&&&&&  &&&$3⟩$1.,                *.$3⟨$1
+ %&&&&&&&&  &&$3/$1..      $3/    \$1      ..$3\$1(&&&&&&
+   #&&&#%%%%.%%%(      $3\_/\_/$1      (%%%.%%%%/
+        /%%%%%%%&&*              ,&&&%%%%%%&
+           &&&&&&&&           &&&&&&&&&&&
+            (&&&&&    &&&&&&&&&&&
+            $2%%$1  &   &&&&&&&&&&&&  &&&&&&&
+           $2%%%$1        #&&&&&&#   &&&&&&&&&
+ $2%%%%%     %%$1                     #&&&&&(
+$2&%.      %%%$1
+  $2%%%%%%%
+)";
+        std::string palette[5] = {};
+        palette[1] = "\033[38;2;255;220;0m";
+        palette[2] = "\033[38;2;47;197;92m";
+        palette[3] = "\033[38;2;0;200;255m";
+        def = "\033[38;2;255;220;0m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "void") {
+        std::string art =
+R"(
+    _______
+ _ \______ -
+| \  ___  \ |
+| | /   \ | |
+| | \___/ | |
+| \______ \_|
+ -_______\
+)";
+        std::string palette[5] = {};
+        palette[1] = "\033[38;2;47;197;92m";
+        palette[2] = "\033[38;2;47;197;92m";
+        def = "\033[38;2;47;197;92m";
+        return parseLogoArt(art, palette, def);
+    }
+    if (logoName == "unknown") {
+        std::string art =
+R"(
+       ________
+   _jgN########Ngg_
+ _N##N@@""  ""9NN##Np_
+d###P            N####p
+"^^"              T####
+                  d###P
+               _g###@F
+            _gN##@P
+          gN###F"
+         d###F
+        0###F
+        0###F
+        0###F
+        "NN@'
+
+         ___
+        q###r
+         ""
+)";
+        std::string palette[5] = {};
+        def = "\033[38;2;180;180;180m";
+        return parseLogoArt(art, palette, def);
     }
     return {};
 }
 
 void showLogo(const std::string& color, const std::string& logoName) {
-    if (logoName == "kiss") {
-        auto lines = getDifferentLogoLines(logoName);
+    auto lines = getDifferentLogoLines(logoName);
+    if (!lines.empty()) {
         for (const auto& l : lines)
             std::cout << l << "\n";
     } else {
@@ -580,10 +825,28 @@ int main(int argc, char* argv[]) {
 
     std::string distro = getDistro();
     std::string logoName = logoArg.empty() ? "" : logoArg;
-    if (logoName.empty() && distro.find("Kiss") != std::string::npos)
-        logoName = "kiss";
+    if (logoName.empty()) {
+        std::string dl = distro;
+        for (auto& c : dl) c = tolower(c);
+        if (dl.find("kiss") != std::string::npos)          logoName = "kiss";
+        else if (dl.find("alpine") != std::string::npos)   logoName = "alpine";
+        else if (dl.find("arch") != std::string::npos)     logoName = "arch";
+        else if (dl.find("artix") != std::string::npos)    logoName = "artix";
+        else if (dl.find("bedrock") != std::string::npos)  logoName = "bedrock";
+        else if (dl.find("chimera") != std::string::npos)  logoName = "chimera";
+        else if (dl.find("debian") != std::string::npos)   logoName = "debian";
+        else if (dl.find("exherbo") != std::string::npos)  logoName = "exherbo";
+        else if (dl.find("gentoo") != std::string::npos)   logoName = "gentoo";
+        else if (dl.find("gnu") != std::string::npos)      logoName = "gnu";
+        else if (dl.find("guix") != std::string::npos)     logoName = "guix";
+        else if (dl.find("haiku") != std::string::npos)    logoName = "haiku";
+        else if (dl.find("parabola") != std::string::npos) logoName = "parabola";
+        else if (dl.find("raspbian") != std::string::npos) logoName = "raspbian";
+        else if (dl.find("uwuntu") != std::string::npos)   logoName = "uwuntu";
+        else if (dl.find("void") != std::string::npos)     logoName = "void";
+    }
 
-    bool useSideBySide = cfg.logo && !logoName.empty() && logoName != "plan9";
+    bool useSideBySide = cfg.logo && !logoName.empty() && getDifferentLogoLines(logoName).size() > 0;
 
     if (useSideBySide) {
         auto logoLines = getDifferentLogoLines(logoName);
@@ -593,73 +856,84 @@ int main(int argc, char* argv[]) {
             infoLines.push_back(cfg.textcolor + key + colors::RESET + "  " + val);
         };
 
-        infoLines.insert(infoLines.begin(), colors::BOLD + std::string(hostname) + "@" + un.sysname + colors::RESET);
+        infoLines.push_back(colors::BOLD + std::string(hostname) + "@" + un.sysname + colors::RESET);
         if (cfg.line)
-            infoLines.insert(infoLines.begin() + 1, "=-=-=-=-=-=-=-=");
-        if (cfg.os)        addInfo("os", distro + " " + getArchitecture());
-        if (cfg.kernel)    addInfo("kernel", std::string(un.release));
-        if (cfg.uptime)    addInfo("uptime", humanUptime(info.uptime));
-        if (cfg.usedram)   addInfo("ram", humanBytes(info.totalram - info.freeram) + " / " + humanBytes(info.totalram));
-        if (cfg.fullram)   addInfo("totalram", humanBytes(info.totalram));
-        if (cfg.procs)     infoLines.push_back(cfg.textcolor + std::string("procs") + "  " + colors::RESET + std::to_string(info.procs));
-        if (cfg.cpu)       addInfo("cpu", getCPUModel());
-        if (cfg.gpu)       addInfo("gpu", getGPUModel());
-        if (cfg.shell)     addInfo("shell", getShell());
-        if (cfg.terminal)  addInfo("terminal", getTerminal());
+            infoLines.push_back("=-=-=-=-=-=-=-=");
+        if (cfg.os)         addInfo("os", distro + " " + getArchitecture());
+        if (cfg.kernel)     addInfo("kernel", std::string(un.release));
+        if (cfg.uptime)     addInfo("uptime", humanUptime(info.uptime));
+        if (cfg.usedram)    addInfo("ram", humanBytes(info.totalram - info.freeram) + " / " + humanBytes(info.totalram));
+        if (cfg.fullram)    addInfo("totalram", humanBytes(info.totalram));
+        if (cfg.procs)      infoLines.push_back(cfg.textcolor + std::string("procs") + "  " + colors::RESET + std::to_string(info.procs));
+        if (cfg.cpu)        addInfo("cpu", getCPUModel());
+        if (cfg.gpu)        addInfo("gpu", getGPUModel());
+        if (cfg.shell)      addInfo("shell", getShell());
+        if (cfg.terminal)   addInfo("terminal", getTerminal());
         if (cfg.resolution) addInfo("resolution", getResolution());
-        if (cfg.packages)  addInfo("packages", getPackages());
-        if (cfg.de)        addInfo("de", getDE());
-        if (cfg.wm)        addInfo("wm", getWM());
-        if (cfg.init)      addInfo("init", getInit());
-        if (cfg.disk)      addInfo("disk", GetDiskInfo());
+        if (cfg.packages)   addInfo("packages", getPackages());
+        if (cfg.de)         addInfo("de", getDE());
+        if (cfg.wm)         addInfo("wm", getWM());
+        if (cfg.init)       addInfo("init", getInit());
+        if (cfg.disk)       addInfo("disk", GetDiskInfo());
         if (cfg.lastrun && !cfg.lastrunstr.empty())
             infoLines.push_back(cfg.textcolor + std::string("lastrun") + "  " + colors::RESET + cfg.lastrunstr);
 
-        size_t maxLogo = logoLines.size();
-        size_t maxInfo = infoLines.size();
-        size_t rows = maxLogo > maxInfo ? maxLogo : maxInfo;
+    size_t maxLogo = logoLines.size();
+        size_t maxInfo = infoLines.size(); 
+        size_t logoTopPadding = 5; 
+
+        size_t totalLogoRows = maxLogo + logoTopPadding;
+        size_t rows = totalLogoRows > maxInfo ? totalLogoRows : maxInfo;
+        const std::string emptyLogoSpace(44, ' '); 
 
         for (size_t i = 0; i < rows; i++) {
-            if (i < maxLogo)
-                std::cout << logoLines[i];
-            else
-                std::cout << std::string(56, ' ');
+           
+            if (i >= logoTopPadding && (i - logoTopPadding) < maxLogo) {
+                std::cout << logoLines[i - logoTopPadding];
+            } else {
+                std::cout << emptyLogoSpace;
+            }
+
             std::cout << "  ";
+
             if (i < maxInfo)
                 std::cout << infoLines[i];
+
             std::cout << "\n";
         }
-        if (cfg.blocks) printBlocks();
+        if (cfg.blocks) printBlocks(emptyLogoSpace + "  ");
     } else {
         if (cfg.logo) showLogo(cfg.logocolor, logoName);
         std::cout << colors::BOLD << hostname << "@" << un.sysname << colors::RESET << "\n";
         if (cfg.line) std::cout << "=-=-=-=-=-=-=-=\n";
-        if (cfg.os)        showInfo("os", distro + " " + getArchitecture(), cfg.textcolor);
-        if (cfg.kernel)    showInfo("kernel", std::string(un.release), cfg.textcolor);
-        if (cfg.uptime)    showInfo("uptime", humanUptime(info.uptime), cfg.textcolor);
-        if (cfg.usedram)   showInfo("ram", humanBytes(info.totalram - info.freeram) + " / " + humanBytes(info.totalram), cfg.textcolor);
-        if (cfg.fullram)   showInfo("totalram", humanBytes(info.totalram), cfg.textcolor);
-        if (cfg.procs)     std::cout << cfg.textcolor << "procs" << "  " << colors::RESET << info.procs << "\n";
-        if (cfg.cpu)       showInfo("cpu", getCPUModel(), cfg.textcolor);
-        if (cfg.gpu)       showInfo("gpu", getGPUModel(), cfg.textcolor);
-        if (cfg.shell)     showInfo("shell", getShell(), cfg.textcolor);
-        if (cfg.terminal)  showInfo("terminal", getTerminal(), cfg.textcolor);
+        if (cfg.os)         showInfo("os", distro + " " + getArchitecture(), cfg.textcolor);
+        if (cfg.kernel)     showInfo("kernel", std::string(un.release), cfg.textcolor);
+        if (cfg.uptime)     showInfo("uptime", humanUptime(info.uptime), cfg.textcolor);
+        if (cfg.usedram)    showInfo("ram", humanBytes(info.totalram - info.freeram) + " / " + humanBytes(info.totalram), cfg.textcolor);
+        if (cfg.fullram)    showInfo("totalram", humanBytes(info.totalram), cfg.textcolor);
+        if (cfg.procs)      std::cout << cfg.textcolor << "procs" << "  " << colors::RESET << info.procs << "\n";
+        if (cfg.cpu)        showInfo("cpu", getCPUModel(), cfg.textcolor);
+        if (cfg.gpu)        showInfo("gpu", getGPUModel(), cfg.textcolor);
+        if (cfg.shell)      showInfo("shell", getShell(), cfg.textcolor);
+        if (cfg.terminal)   showInfo("terminal", getTerminal(), cfg.textcolor);
         if (cfg.resolution) showInfo("resolution", getResolution(), cfg.textcolor);
-        if (cfg.packages)  showInfo("packages", getPackages(), cfg.textcolor);
-        if (cfg.de)        showInfo("de", getDE(), cfg.textcolor);
-        if (cfg.wm)        showInfo("wm", getWM(), cfg.textcolor);
-        if (cfg.init)      showInfo("init", getInit(), cfg.textcolor);
-        if (cfg.disk)      showInfo("disk", GetDiskInfo(), cfg.textcolor);
+        if (cfg.packages)   showInfo("packages", getPackages(), cfg.textcolor);
+        if (cfg.de)         showInfo("de", getDE(), cfg.textcolor);
+        if (cfg.wm)         showInfo("wm", getWM(), cfg.textcolor);
+        if (cfg.init)       showInfo("init", getInit(), cfg.textcolor);
+        if (cfg.disk)       showInfo("disk", GetDiskInfo(), cfg.textcolor);
         if (cfg.lastrun && !cfg.lastrunstr.empty())
             std::cout << cfg.textcolor << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n";
         if (cfg.blocks) printBlocks();
     }
+
     try {
         toml::table t = toml::parse_file(path);             
         if (!t.contains("state"))                      
-        t.insert("state", toml::table{});
+            t.insert("state", toml::table{});
         t["state"].as_table()->insert_or_assign("lastrun", currentTime());
         std::ofstream(path) << t;
-     } catch (const toml::parse_error& e) { std::cerr << "Error config fail" << std::endl; 
-   }  
+    } catch (const toml::parse_error& e) {
+        std::cerr << "Error config fail\n";
+    }  
 }
