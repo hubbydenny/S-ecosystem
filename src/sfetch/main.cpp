@@ -504,8 +504,8 @@ void showplan9Logo(const std::string& color = colors::GREEN) {
               << "  c\?\".UJ\n"
               << colors::RESET;
 };
-std::vector<std::string> getDifferentLogoLines(const std::string& distro) {
-    if (distro.find("Kiss") != std::string::npos) {
+std::vector<std::string> getDifferentLogoLines(const std::string& logoName) {
+    if (logoName == "kiss") {
         const char* K = "\033[40m  \033[0m";
         const char* R = "\033[41m  \033[0m";
         const char* W = "\033[47m  \033[0m";
@@ -543,10 +543,9 @@ std::vector<std::string> getDifferentLogoLines(const std::string& distro) {
     return {};
 }
 
-void showLogo(const std::string& color) {
-    std::string distro = getDistro();
-    if (distro.find("Kiss") != std::string::npos) {
-        auto lines = getDifferentLogoLines(distro);
+void showLogo(const std::string& color, const std::string& logoName) {
+    if (logoName == "kiss") {
+        auto lines = getDifferentLogoLines(logoName);
         for (const auto& l : lines)
             std::cout << l << "\n";
     } else {
@@ -558,7 +557,13 @@ void showInfo(const std::string& key, const std::string& value, const std::strin
     std::cout << color << key << colors::RESET << "  " << value << "\n";
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    std::string logoArg;
+    for (int i = 1; i < argc; i++) {
+        if (std::string(argv[i]) == "--logo" && i + 1 < argc)
+            logoArg = argv[++i];
+    }
+
     std::string path = std::string(getenv("HOME")) + "/.config/sfetch/config.toml";
     ensureConfig(path);
     Config cfg = loadConfig(path);
@@ -574,10 +579,14 @@ int main() {
     gethostname(hostname, sizeof hostname);
 
     std::string distro = getDistro();
-    bool useSideBySide = cfg.logo && distro.find("Kiss") != std::string::npos;
+    std::string logoName = logoArg.empty() ? "" : logoArg;
+    if (logoName.empty() && distro.find("Kiss") != std::string::npos)
+        logoName = "kiss";
+
+    bool useSideBySide = cfg.logo && !logoName.empty() && logoName != "plan9";
 
     if (useSideBySide) {
-        auto logoLines = getDifferentLogoLines(distro);
+        auto logoLines = getDifferentLogoLines(logoName);
 
         std::vector<std::string> infoLines;
         auto addInfo = [&](const std::string& key, const std::string& val) {
@@ -622,7 +631,7 @@ int main() {
         }
         if (cfg.blocks) printBlocks();
     } else {
-        if (cfg.logo) showplan9Logo(cfg.logocolor);
+        if (cfg.logo) showLogo(cfg.logocolor, logoName);
         std::cout << colors::BOLD << hostname << "@" << un.sysname << colors::RESET << "\n";
         if (cfg.line) std::cout << "=-=-=-=-=-=-=-=\n";
         if (cfg.os)        showInfo("os", distro + " " + getArchitecture(), cfg.textcolor);
