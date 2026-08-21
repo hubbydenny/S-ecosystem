@@ -512,23 +512,23 @@ std::vector<std::string> getDifferentLogoLines(const std::string& logoName) {
         const char* P = "\033[45m  \033[0m";
 
         std::vector<std::vector<std::string>> art = {
-            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
-            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
-            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
-            {K,K,K,K,K,K,R,R,R,R,R,K,K,K,R,R,R,R,R,K,K,K,K,K,K},
-            {K,K,K,K,K,R,R,R,R,R,R,R,K,R,R,R,R,R,R,R,K,K,K,K,K},
-            {K,K,K,K,W,W,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K},
-            {K,K,K,P,W,W,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,P,K,K,K},
-            {K,K,W,K,W,W,R,R,W,W,W,W,W,W,W,W,W,W,W,R,R,R,W,K,K},
-            {K,K,W,K,K,R,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,R,W,K,K},
-            {K,K,K,K,R,R,R,W,W,W,W,W,W,W,W,W,W,W,W,W,W,R,R,K,K},
-            {K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K},
-            {K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K},
-            {K,K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K},
-            {K,K,K,K,K,K,K,R,R,R,R,W,W,W,W,W,R,R,R,R,K,K,K,K,K},
-            {K,K,K,K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K,K,K},
-            {K,K,K,K,K,K,K,K,K,K,R,R,R,R,R,R,R,K,K,K,K,K,K,K,K},
-            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K}
+            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
+            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
+            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
+            {K,K,K,K,K,K,K,R,R,R,R,R,K,K,K,R,R,R,R,R,K,K,K,K,K,K},
+            {K,K,K,K,K,R,R,R,R,R,R,R,K,R,R,R,R,R,R,R,R,K,K,K,K,K},
+            {K,K,K,K,W,W,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K},
+            {K,K,K,P,W,W,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K},
+            {K,K,W,K,W,W,R,R,W,W,W,W,W,W,W,W,W,W,W,R,R,R,R,K,K,K},
+            {K,K,W,K,K,R,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,R,R,K,K,K},
+            {K,K,K,K,R,R,R,W,W,W,W,W,W,W,W,W,W,W,W,W,W,R,R,K,K,K},
+            {K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K},
+            {K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K},
+            {K,K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K,K},
+            {K,K,K,K,K,K,K,R,R,R,R,W,W,W,W,W,R,R,R,R,K,K,K,K,K,K},
+            {K,K,K,K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K,K,K,K},
+            {K,K,K,K,K,K,K,K,K,K,R,R,R,R,R,R,R,K,K,K,K,K,K,K,K,K},
+            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K}
         };
 
         std::vector<std::string> lines;
