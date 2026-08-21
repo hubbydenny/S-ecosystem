@@ -865,22 +865,32 @@ $1 `-|.'   /_.          $4\_|  $1 F
 )";
         return parseLogoArt(art);
     }
-    if (logoName == "void2") {
-        std::string art =
-R"(
-    _______
- _ \______ -
-| \  ___  \ |
-| | /   \ | |
-| | \___/ | |
-| \______ \_|
- -_______\
+    if (logoName == "FreeBSD") {
+        std::string art = 
+R"(                                                                                                 
+```                        $2`
+  $1` `.....---...$2....--.```   -/
+  $1+o   .--`         $2/y:`      +.
+   $1yo`:.            $2:o      `+-
+    $1y/               $2-/`   -o/
+   $1.-                  $2::/sy+:.
+   $1/                     $2`--  /
+  $1`:                          $2:`
+  $1`:                          $2:`
+   $1/                          $2/
+   $1.-                        $2-.
+    $1--                      $2-.
+     $1`:`                  $2`:`
+       .--             `--.
+          .---.....----.
+
 )";
         return parseLogoArt(art);
     }
-    if (logoName == "unknown") {
+    if (logoName == "Unknown") {
         std::string art =
 R"(
+
        ________
    _jgN########Ngg_
  _N##N@@""  ""9NN##Np_
@@ -963,6 +973,7 @@ int main(int argc, char* argv[]) {
         else if (dl.find("void") != std::string::npos)     logoName = "void";
         else if (dl.find("netbsd") != std::string::npos)   logoName = "netbsd";
         else if (dl.find("openbsd") != std::string::npos)  logoName = "openbsd";
+        else if (dl.find("freebsd") != std::string::npos)  logoName = "FreeBSD";
     }
 
     bool useSideBySide = cfg.logo && !logoName.empty() && getDifferentLogoLines(logoName).size() > 0;
