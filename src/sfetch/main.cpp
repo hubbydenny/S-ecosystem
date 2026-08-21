@@ -1,4 +1,6 @@
 #include <unistd.h>
+#include <array>
+#include <vector>
 #include <filesystem>
 #include <iostream>
 #include <fstream>
@@ -6,9 +8,22 @@
 #include <cstring>
 #include <sys/utsname.h>
 #include <sys/sysinfo.h>
+#include <sys/statvfs.h>
 #include <ctime>
 #include "../../src/helpers/color.h"
 #include "../../src/helpers/config.h"
+namespace fs = std::filesystem;
+
+std::string command(const std::string& cmd) { 
+  std::array<char, 256> buffer{};
+  std::string result;
+  FILE* pipe = popen(cmd.c_str(), "r");
+  if (!pipe) return "";
+  while (fgets(buffer.data(), buffer.size(), pipe)) result += buffer.data();
+  pclose(pipe);
+  while (!result.empty() && (result.back() == '\n' || result.back() == ' ')) result.pop_back();
+  return result; 
+};
 
 std::string currentTime() {
     std::time_t now = std::time(nullptr);
@@ -16,7 +31,13 @@ std::string currentTime() {
     char buf[32];
     std::strftime(buf, sizeof buf, "%Y-%m-%d %H:%M", tm);
     return buf;
-}
+};
+
+std::string trim(std::string s) { 
+  while (!s.empty() && isspace(s.front())) s.erase(s.begin()); 
+  while (!s.empty() && isspace(s.back())) s.pop_back(); 
+  return s;
+};
 
 // TODO  2. make color system that interact with fetch 3. make config system with toml #ALMOST 4. logos #Will make
 std::string readFile(const std::string& path) {
@@ -24,27 +45,64 @@ std::string readFile(const std::string& path) {
     if (!file.is_open()) return "";
     return std::string((std::istreambuf_iterator<char>(file)),
                        std::istreambuf_iterator<char>());
-}
+};
 
 std::string readFirstLine(const std::string& path) {
     std::ifstream file(path);
     std::string line;
     std::getline(file, line);
     return line;
-}
+};
 
+std::string getShell() {
+  const char* shell = getenv("SHELL");
+  if (!shell) return "Unknown";
+  std::string path(shell);
+  size_t pos = path.find_last_of('/');
+  if (pos != std::string::npos) return path.substr(pos + 1);
+  return path; 
+};
+
+std::string getTerminal() { const char* vars[] = {
+  "TERM_PROGRAM", "TERM", "COLORTERM", "Kitty", "KITTY", "Alacritty", "ALACRITTY", "Xterm", "XTERM", "St", "ST", "foot", "FOOT" };
+  for (const char* var : vars) {
+  const char* value = getenv(var);
+  if (value && strlen(value)) return value; 
+  } 
+  return "Unknown";
+};
+
+std::string getResolution() {
+  std::string result = command("xrandr 2>/dev/null | grep -oE '[0-9]+x[0-9]+\\+[0-9]+\\+[0-9]+' | head -n1 | cut -d '+' -f1");
+  if (!result.empty()) return result;
+  result = command("wayland-info 2>/dev/null | grep -m1 -oE '[0-9]+x[0-9]+'");
+  if (!result.empty()) return result;
+  return "Unknown";
+};
+    
 std::string getDistro() {
-    std::string content = readFile("/etc/os-release");
-    size_t pos = content.find("NAME=");
-    if (pos == std::string::npos) return "Unknown Linux";
-    size_t start = pos + 5;
-    size_t end = content.find('\n', start);
-    std::string name = content.substr(start, end - start);
-    if (!name.empty() && name.front() == '"') name.erase(0, 1);
-    if (!name.empty() && name.back() == '"') name.pop_back();
-    return name;
-}
+std::string content = readFile("/etc/os-release");
+size_t pos = content.find("NAME=");
+if (pos == std::string::npos) return "Unknown Linux";
+size_t start = pos + 5;
+size_t end = content.find('\n', start);
+std::string name = content.substr(start, end - start);
+if (!name.empty() && name.front() == '"') name.erase(0, 1);
+if (!name.empty() && name.back() == '"') name.pop_back();
+return name;
+};
 
+struct DiskInfo {
+  unsigned long long total = 0;
+  unsigned long long free = 0;
+};
+DiskInfo getDisk(const std::string& path) {
+  struct statvfs stat{};
+  DiskInfo result; 
+  if (statvfs(path.c_str(), &stat) != 0) return result;
+  result.total = static_cast<unsigned long long>(stat.f_blocks) * stat.f_frsize;
+  result.free = static_cast<unsigned long long>(stat.f_bavail) * stat.f_frsize; 
+  return result; }
 std::string getCPUModel() {
     std::ifstream file("/proc/cpuinfo");
     std::string line;
@@ -60,7 +118,7 @@ std::string getCPUModel() {
         }
     }
     return "Unknown";
-}
+};
 
 std::string getGPUModel() {
     std::string vendor = readFirstLine("/sys/class/drm/card0/device/vendor");
@@ -84,8 +142,333 @@ std::string humanBytes(unsigned long long bytes) {
     else
         std::snprintf(buf, sizeof buf, "%llu B", bytes);
     return buf;
+};
+std::string GetDiskInfo() {
+  DiskInfo disk = getDisk("/");
+  if (!disk.total) return "Unknown";
+  unsigned long long used = disk.total - disk.free;
+  int percent = static_cast<int>((used * 100.0) / disk.total);
+  return humanBytes(used) + " / " + humanBytes(disk.total) + " (" + std::to_string(percent) + "%)";
 }
+std::string getPackages() {
+  std::vector<std::pair<std::string, std::string>> managers = {
+        // Arch Linux / derivatives
+        {"pacman", "pacman -Qq 2>/dev/null | wc -l"},
 
+        // Debian / Ubuntu / Mint / Pop!_OS
+        {"dpkg", "dpkg-query -f '${binary:Package}\\n' -W 2>/dev/null | wc -l"},
+
+        // Fedora / RHEL / CentOS / Rocky / Alma
+        {"rpm", "rpm -qa 2>/dev/null | wc -l"},
+
+        // openSUSE
+        {"zypper", "rpm -qa 2>/dev/null | wc -l"},
+
+        // Alpine
+        {"apk", "apk info 2>/dev/null | wc -l"},
+
+        // Gentoo
+        {"equery", "equery list 2>/dev/null | wc -l"},
+
+        // Void Linux
+        {"xbps-query", "xbps-query -l 2>/dev/null | wc -l"},
+
+        // Solus
+        {"eopkg", "eopkg list-installed 2>/dev/null | wc -l"},
+
+        // NixOS
+        {"nix-env", "nix-env -q 2>/dev/null | wc -l"}
+    };
+
+    std::vector<std::string> results;
+
+    for (const auto& [manager, cmd] : managers) {
+      std::string check = command(
+            "command -v " + manager + " 2>/dev/null"
+        );
+
+        if (check.empty())
+            continue;
+
+        std::string count = trim(command(cmd));
+
+        if (count.empty() || count == "0")
+            continue;
+
+        results.push_back(count + " (" + manager + ")");
+    }
+
+    // Flatpak
+    std::string flatpak = trim(command(
+        "flatpak list 2>/dev/null | tail -n +1 | wc -l"
+    ));
+
+    // Snap
+    std::string snap = trim(command(
+        "snap list 2>/dev/null | tail -n +2 | wc -l"
+    ));
+
+    std::string result;
+
+    if (!results.empty())
+        result = results[0];
+
+    if (!flatpak.empty() && flatpak != "0") {
+        if (!result.empty())
+            result += ", ";
+
+        result += flatpak + " (flatpak)";
+    }
+
+    if (!snap.empty() && snap != "0") {
+        if (!result.empty())
+            result += ", ";
+
+        result += snap + " (snap)";
+    }
+
+    return result.empty() ? "Unknown" : result;
+}
+std::string getDE() {
+    const char* vars[] = {
+        "XDG_CURRENT_DESKTOP",
+        "XDG_SESSION_DESKTOP",
+        "DESKTOP_SESSION"
+    };
+
+    std::string de;
+    for (const char* var : vars) {
+        const char* value = getenv(var);
+
+        if (value && strlen(value)) {
+            de = value;
+            break;
+        }
+    }
+
+    if (de.empty())
+        return "Unknown";
+
+    // KDE Plasma
+    if (de.find("KDE") != std::string::npos ||
+        de.find("kde") != std::string::npos ||
+        de.find("PLASMA") != std::string::npos ||
+        de.find("plasma") != std::string::npos)
+        return "KDE Plasma";
+
+    // GNOME
+    if (de.find("GNOME") != std::string::npos ||
+        de.find("gnome") != std::string::npos)
+        return "GNOME";
+
+    // XFCE
+    if (de.find("XFCE") != std::string::npos ||
+        de.find("xfce") != std::string::npos)
+        return "Xfce";
+
+    // Cinnamon
+    if (de.find("Cinnamon") != std::string::npos ||
+        de.find("cinnamon") != std::string::npos)
+        return "Cinnamon";
+
+    // MATE
+    if (de.find("MATE") != std::string::npos ||
+        de.find("mate") != std::string::npos)
+        return "MATE";
+
+    // LXQt
+    if (de.find("LXQt") != std::string::npos ||
+        de.find("lxqt") != std::string::npos)
+        return "LXQt";
+
+    // LXDE
+    if (de.find("LXDE") != std::string::npos ||
+        de.find("lxde") != std::string::npos)
+        return "LXDE";
+
+    // Budgie
+    if (de.find("Budgie") != std::string::npos ||
+        de.find("budgie") != std::string::npos)
+        return "Budgie";
+
+    // Unity
+    if (de.find("Unity") != std::string::npos ||
+        de.find("unity") != std::string::npos)
+        return "Unity";
+
+    // Deepin
+    if (de.find("Deepin") != std::string::npos ||
+        de.find("deepin") != std::string::npos)
+        return "Deepin";
+
+    // Pantheon
+    if (de.find("Pantheon") != std::string::npos ||
+        de.find("pantheon") != std::string::npos)
+        return "Pantheon";
+
+    // COSMIC
+    if (de.find("COSMIC") != std::string::npos ||
+        de.find("cosmic") != std::string::npos)
+        return "COSMIC";
+
+    return de;
+}
+std::string getWM() { 
+    const char* wayland = getenv("WAYLAND_DISPLAY");
+
+    if (wayland) {
+        const char* desktop = getenv("XDG_CURRENT_DESKTOP");
+
+        if (desktop) {
+          std::string de = desktop;
+
+            if (de.find("KDE") != std::string::npos)
+                return "KWin";
+
+            if (de.find("GNOME") != std::string::npos)
+                return "Mutter";
+
+            if (de.find("Hyprland") != std::string::npos)
+                return "Hyprland";
+
+            if (de.find("Sway") != std::string::npos)
+                return "Sway";
+
+            if (de.find("river") != std::string::npos)
+                return "river";
+
+            if (de.find("niri") != std::string::npos)
+                return "Niri";
+
+            if (de.find("COSMIC") != std::string::npos)
+                return "COSMIC";
+        }
+
+        // Common environment variables
+        if (getenv("HYPRLAND_INSTANCE_SIGNATURE"))
+            return "Hyprland";
+
+        if (getenv("SWAYSOCK"))
+            return "Sway";
+
+        if (getenv("RIVER_SOCKET"))
+            return "river";
+
+        if (getenv("NIRI_SOCKET"))
+            return "Niri";
+    }
+    std::string result = trim(command(
+        "wmctrl -m 2>/dev/null | "
+        "grep '^Name:' | "
+        "cut -d ':' -f2"
+    ));
+
+    if (!result.empty())
+        return result;
+    const char* de = getenv("XDG_CURRENT_DESKTOP");
+
+    if (de) {
+      std::string value = de;
+
+        if (value.find("XFCE") != std::string::npos)
+            return "Xfwm";
+
+        if (value.find("KDE") != std::string::npos)
+            return "KWin";
+
+        if (value.find("GNOME") != std::string::npos)
+            return "Mutter";
+    }
+
+    return "Unknown";
+};
+
+std::string getInit() {
+  std::string pid1 = readFirstLine("/proc/1/comm");
+
+    if (!pid1.empty()) {
+        if (pid1 == "systemd")
+            return "systemd";
+
+        if (pid1 == "init")
+            return "SysVinit";
+
+        if (pid1 == "openrc-init")
+            return "OpenRC";
+
+        if (pid1 == "runit")
+            return "runit";
+
+        if (pid1 == "s6-svscan")
+            return "s6";
+
+        if (pid1 == "dinit")
+            return "dinit";
+
+        if (pid1 == "busybox")
+            return "BusyBox init";
+
+        return pid1;
+    }
+    if (fs::exists("/run/systemd/system"))
+        return "systemd";
+
+    if (fs::exists("/run/openrc"))
+        return "OpenRC";
+
+    if (fs::exists("/run/runit"))
+        return "runit";
+
+    if (fs::exists("/run/s6"))
+        return "s6";
+
+    return "Unknown";
+}
+std::string getArchitecture() {
+    struct utsname info{};
+
+    if (uname(&info) != 0)
+        return "Unknown";
+
+    std::string arch = info.machine;
+
+    if (arch == "x86_64")
+        return "x86_64";
+
+    if (arch == "aarch64" ||
+        arch == "arm64")
+        return "ARM64";
+
+    if (arch == "armv7l" ||
+        arch == "armv7")
+        return "ARMv7";
+
+    if (arch == "armv6l")
+        return "ARMv6";
+
+    if (arch == "i386" ||
+        arch == "i486" ||
+        arch == "i586" ||
+        arch == "i686")
+        return "x86";
+
+    if (arch == "riscv64")
+        return "RISC-V 64";
+
+    if (arch == "ppc64le")
+        return "PowerPC64 LE";
+
+    if (arch == "ppc64")
+        return "PowerPC64";
+
+    if (arch == "s390x")
+        return "IBM Z";
+
+    if (arch == "mips64")
+        return "MIPS64";
+
+    return arch;
+}
 std::string humanUptime(long seconds) {
     long days = seconds / 86400;
     long hours = (seconds % 86400) / 3600;
@@ -98,7 +481,7 @@ std::string humanUptime(long seconds) {
     else
         std::snprintf(buf, sizeof buf, "%ldm", mins);
     return buf;
-}
+};
 
 void showplan9Logo(const std::string& color = colors::GREEN) {
     std::cout << color
@@ -109,7 +492,7 @@ void showplan9Logo(const std::string& color = colors::GREEN) {
               << "  \xC2\xBF     ;\n"
               << "  c\?\".UJ\n"
               << colors::RESET;
-}
+};
 
 void showInfo(const std::string& key, const std::string& value, const std::string& color = colors::BLUE) {
     std::cout << color << key << colors::RESET << "  " << value << "\n";

@@ -26,6 +26,7 @@ line = true
 lastrun = true
 fullram = false
 freeram = false
+blocks = false
 
 [colors]
 logocolor = "white"
@@ -46,6 +47,7 @@ bool line = true;
 bool fullram = false;
 bool freeram = false;
 bool lastrun = true;
+bool blocks = false;
 std::string textcolor = colors::BLUE;
 std::string logocolor = colors::RESET;
 std::string lastrunstr;
@@ -69,6 +71,7 @@ Config loadConfig(const std::string& path) {
         c.logo    = t["setup"]["logo"].value_or(c.logo);
         c.line    = t["setup"]["line"].value_or(c.line);
         c.lastrun = t["setup"]["lastrun"].value_or(c.lastrun);
+        c.blocks = t["setup"]["blocks"].value_or(c.blocks);
         c.lastrunstr = t["state"]["lastrun"].value_or(c.lastrunstr);
 
         std::string n = t["colors"]["logocolor"].value_or(std::string("white"));
