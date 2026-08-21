@@ -379,7 +379,7 @@ static std::vector<std::string> parseLogoArt(const std::string& art) {
 }
 
 std::vector<std::string> getDifferentLogoLines(const std::string& logoName) {
-    if (logoName == "kiss" || logoName == "Kiss") {
+   if (logoName == "kiss" || logoName == "Kiss") {
         const std::string R  = "\033[38;2;255;0;0m██";       
         const std::string W  = "\033[38;2;255;255;255m██";   
         const std::string P  = "\033[38;2;210;0;70m██";     
@@ -387,15 +387,15 @@ std::vector<std::string> getDifferentLogoLines(const std::string& logoName) {
         const std::string RS = "\033[0m";                    
 
         const std::vector<std::string> logo = {
-            S+S+S+S+S+R+R+R+R+S+S+S+R+R+R+R+S+S+S+S+S,
-            S+S+S+W+W+R+R+R+R+R+R+R+R+R+R+R+R+S+S+S+S,
-            S+S+P+W+W+R+R+R+R+R+R+R+R+R+R+R+R+R+S+S+S,
-            S+R+W+R+R+W+W+W+W+W+W+W+W+W+W+R+R+R+R+S+S,
-            R+R+R+R+W+W+W+W+W+W+W+W+W+W+W+W+R+R+R+R+S,
-            R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+S,
-            S+R+R+R+R+R+R+W+W+W+W+W+R+R+R+R+R+R+R+S+S,
-            S+S+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+S+S+S,
-            S+S+S+S+S+R+R+R+R+R+R+R+R+R+R+S+S+S+S+S+S
+            S+S+S+S+S + R+R+R+R + S+S+S + R+R+R+R + S+S+S+S+S,
+            S+S+S + W+W + R+R+R+R+R+R+R+R+R+R+R+R + S+S+S+S,
+            S+S + P+W+W + R+R+R+R+R+R+R+R+R+R+R+R + S+S+S+S,
+            S + R+W+R+R + W+W+W+W+W+W+W+W+W+W + R+R+R+R + S+S,
+            R+R+R+R + W+W+W+W+W+W+W+W+W+W+W+W + R+R+R+R + S,
+            R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R + S,
+            S + R+R+R+R+R+R + W+W+W+W+W + R+R+R+R+R+R + S+S,
+            S+S + R+R+R+R+R+R+R+R+R+R+R+R+R+R+R+R + S+S+S,
+            S+S+S+S+S + R+R+R+R+R+R+R+R+R+R + S+S+S+S+S+S
         };
 
         std::vector<std::string> lines;
@@ -404,8 +404,7 @@ std::vector<std::string> getDifferentLogoLines(const std::string& logoName) {
             lines.push_back("  " + row + RS);
         }
         return lines;
-    }
-    if (logoName == "alpine") {
+    }    if (logoName == "alpine") {
         std::string art =
 R"(
     /\ /\
@@ -416,7 +415,7 @@ R"(
 )";
         return parseLogoArt(art);
     }
-    if (logoName == "alpine2") {
+    if (logoName == "alpine2") { //if u want this custom logo for alpine
         std::string art =
 R"(
 $1   /\ /\
