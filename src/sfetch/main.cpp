@@ -189,6 +189,29 @@ std::string getCPUModel() {
 };
 
 std::string getGPUModel() {
+#ifndef __linux__
+    {
+        FILE* p = popen("pciconf -lv 2>/dev/null", "r");
+        if (p) {
+            char buf[1024];
+            while (fgets(buf, sizeof buf, p)) {
+                std::string line(buf);
+                if (line.find("class=0x03") == std::string::npos) continue;
+                size_t v = line.find("vendor=0x");
+                if (v == std::string::npos) continue;
+                std::string id = line.substr(v + 9, 4);
+                pclose(p);
+                if (id == "10de") return "NVIDIA";
+                if (id == "1002") return "AMD";
+                if (id == "8086") return "Intel";
+                if (id == "15ad") return "VMware";
+                if (id == "80ee") return "VirtualBox";
+                return "Unknown GPU";
+            }
+            pclose(p);
+        }
+    }
+#endif
     std::string vendor = readFirstLine("/sys/class/drm/card0/device/vendor");
     std::string device = readFirstLine("/sys/class/drm/card0/device/device");
     std::string name;
