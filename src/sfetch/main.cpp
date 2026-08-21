@@ -81,15 +81,15 @@ std::string getResolution() {
 };
     
 std::string getDistro() {
-std::string content = readFile("/etc/os-release");
-size_t pos = content.find("NAME=");
-if (pos == std::string::npos) return "Unknown Linux";
-size_t start = pos + 5;
-size_t end = content.find('\n', start);
-std::string name = content.substr(start, end - start);
-if (!name.empty() && name.front() == '"') name.erase(0, 1);
-if (!name.empty() && name.back() == '"') name.pop_back();
-return name;
+    std::string content = readFile("/etc/os-release");
+    size_t pos = content.find("PRETTY_NAME=");
+    if (pos == std::string::npos) return "Unknown Linux";
+    size_t start = pos + 13;
+    size_t end = content.find('\n', start);
+    std::string name = content.substr(start, end - start);
+    if (!name.empty() && name.front() == '"') name.erase(0, 1);
+    if (!name.empty() && name.back() == '"') name.pop_back();
+    return name;
 };
 
 struct DiskInfo {
@@ -469,6 +469,17 @@ std::string getArchitecture() {
 
     return arch;
 }
+void printBlocks() {
+  std::cout << "  ";
+  for (int i = 0; i < 8; ++i)
+    std::cout << "\033[" << (40 + i) << "m" << "   ";
+  std::cout << colors::RESET << "\n";
+  std::cout << "  ";
+  for (int i = 0; i < 8; ++i)
+    std::cout << "\033[" << (100 + i) << "m" << "   ";
+  std::cout << colors::RESET << "\n";
+}
+
 std::string humanUptime(long seconds) {
     long days = seconds / 86400;
     long hours = (seconds % 86400) / 3600;
@@ -493,7 +504,10 @@ void showplan9Logo(const std::string& color = colors::GREEN) {
               << "  c\?\".UJ\n"
               << colors::RESET;
 };
+void showDifferentlogo() {
 
+
+}
 void showInfo(const std::string& key, const std::string& value, const std::string& color = colors::BLUE) {
     std::cout << color << key << colors::RESET << "  " << value << "\n";
 }
@@ -550,6 +564,8 @@ int main() {
     showInfo("init", getInit(), cfg.textcolor);
     } if (cfg.disk) {
     showInfo("disk", GetDiskInfo(), cfg.textcolor);
+    } if (cfg.blocks) {
+    printBlocks();
     } if (cfg.lastrun && !cfg.lastrunstr.empty()) {
       std::cout << cfg.textcolor << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n"; 
     }
