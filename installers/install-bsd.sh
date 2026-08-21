@@ -1,6 +1,4 @@
 #!/bin/sh
-# S-ecosystem installer for BSD systems (FreeBSD, OpenBSD, NetBSD)
-# Also works on Linux. POSIX sh, no bash required.
 set -e
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -10,7 +8,6 @@ OS="$(uname -s)"
 
 if [ "$1" = "uninstall" ]; then
     if [ "$(id -u)" -ne 0 ]; then
-        echo "[*] Need root."
         exec ${DOAS:-sudo} sh "$0" uninstall
     fi
     for bin in sfetch scat sls; do
@@ -23,7 +20,6 @@ if [ "$1" = "uninstall" ]; then
 fi
 
 if [ "$(id -u)" -ne 0 ]; then
-    echo "[*] Need root. Enter password:"
     if command -v doas >/dev/null 2>&1; then
         exec doas sh "$0" "$@"
     else
@@ -36,7 +32,6 @@ echo ""
 
 cd "$ROOT"
 
-# Find a C++ compiler
 CXX="${CXX:-}"
 if [ -z "$CXX" ]; then
     for c in c++ clang++ g++ eg++ ; do
@@ -55,7 +50,6 @@ if [ -z "$CXX" ]; then
 fi
 echo "[*] Compiler: $CXX"
 
-# Check C++20 support
 cat > /tmp/secos-conftest.cpp <<'EOF'
 int main() { return 0; }
 EOF

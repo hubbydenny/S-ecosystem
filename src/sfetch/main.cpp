@@ -10,11 +10,14 @@
 #include <sys/utsname.h>
 #ifdef __linux__
 #include <sys/sysinfo.h>
-#elif defined(__FreeBSD__) || defined(__DragonFly__)
+#elif defined(__FreeBSD__) || defined(__DragonFly__) || defined(__OpenBSD__) || defined(__NetBSD__)
 #include <sys/sysctl.h>
+#if defined(__FreeBSD__) || defined(__DragonFly__)
 #include <sys/user.h>
 #endif
+#endif
 #include <sys/statvfs.h>
+#include <sys/time.h>
 
 struct SysStats {
     long uptime = 0;
@@ -32,16 +35,28 @@ static bool getSysStats(SysStats& s) {
     s.freeram = i.freeram;
     s.procs = i.procs;
     return true;
-#elif defined(__FreeBSD__) || defined(__DragonFly__)
+#elif defined(__FreeBSD__) || defined(__DragonFly__) || defined(__OpenBSD__) || defined(__NetBSD__)
     struct timespec ts;
-    if (clock_gettime(CLOCK_UPTIME, &ts) == 0) s.uptime = ts.tv_sec;
+    if (clock_gettime(CLOCK_UPTIME, &ts) == 0) {
+        s.uptime = ts.tv_sec;
+    } else {
+        struct timeval bt {};
+        size_t blen = sizeof(bt);
+        if (sysctlbyname("kern.boottime", &bt, &blen, nullptr, 0) == 0) {
+            struct timeval now {};
+            gettimeofday(&now, nullptr);
+            s.uptime = (long)(now.tv_sec - bt.tv_sec);
+        }
+    }
     size_t len = sizeof(s.totalram);
     sysctlbyname("hw.physmem", &s.totalram, &len, nullptr, 0);
     len = sizeof(s.freeram);
     sysctlbyname("hw.usermem", &s.freeram, &len, nullptr, 0);
+#if defined(__FreeBSD__) || defined(__DragonFly__)
     len = 0;
     if (sysctlbyname("kern.proc.all", nullptr, &len, nullptr, 0) == 0)
         s.procs = (unsigned)(len / sizeof(struct kinfo_proc));
+#endif
     return true;
 #else
     return false;
@@ -215,7 +230,10 @@ std::string getPackages() {
         {"equery", "equery list 2>/dev/null | wc -l"},
         {"xbps-query", "xbps-query -l 2>/dev/null | wc -l"},
         {"eopkg", "eopkg list-installed 2>/dev/null | wc -l"},
-        {"nix-env", "nix-env -q 2>/dev/null | wc -l"}
+        {"nix-env", "nix-env -q 2>/dev/null | wc -l"},
+        {"pkg", "pkg info 2>/dev/null | wc -l"},
+        {"pkgin", "pkgin list 2>/dev/null | tail -n +2 | wc -l"},
+        {"pkg_info", "pkg_info 2>/dev/null | wc -l"}
     };
 
     std::vector<std::string> results;
@@ -322,6 +340,12 @@ std::string getWM() {
 
 std::string getInit() {
     std::string pid1 = readFirstLine("/proc/1/comm");
+#ifndef __linux__
+    if (pid1.empty()) {
+        pid1 = trim(command("ps -o comm= -p 1 2>/dev/null"));
+        if (!pid1.empty()) return pid1;
+    }
+#endif
     if (!pid1.empty()) {
         if (pid1 == "systemd") return "systemd";
         if (pid1 == "init") return "SysVinit";
@@ -418,7 +442,7 @@ static std::vector<std::string> parseLogoArt(const std::string& art) {
         if (raw.empty()) continue;
         std::string line;
         for (size_t i = 0; i < raw.size(); i++) {
-            if (raw[i] == '$' && i + 1 < raw.size() && raw[i + 1] >= '1' && raw[i + 1] <= '4') {
+            if (raw[i] == '$' && i + 1 < raw.size() && raw[i + 1] >= '1' && raw[i + 1] <= '5') {
                 i++;
             } else {
                 line += raw[i];
@@ -766,6 +790,71 @@ R"(
 )";
         return parseLogoArt(art);
     }
+    if (logoName == "netbsd") {
+        std::string art =
+R"(
+$1                     `-/oshdmNMNdhyo+:-`
+$2y$1/s+:-``    `.-:+oydNMMMMNhs/-``
+$2-m+$1NMMMMMMMMMMMMMMMMMMMNdhmNMMMmdhs+/-`
+ $2-m+$1NMMMMMMMMMMMMMMMMMMMMmy+:`
+  $2-N/$1dMMMMMMMMMMMMMMMds:`
+   $2-N/$1hMMMMMMMMMmho:`
+    $2-N/$1-:/++/:.`
+$2     :M+
+      :Mo
+       :Ms
+        :Ms
+         :Ms
+          :Ms
+           :Ms
+            :Ms
+             :Ms
+              :Ms
+)";
+        return parseLogoArt(art);
+    }
+    if (logoName == "openbsd") {
+        std::string art =
+R"(
+$3                                     _
+                                    (_)
+$1              |    .
+$1          .   |L  /|   .         $3 _
+$1      _ . |\ _| \--+._/| .       $3(_)
+$1     / ||\| Y J  )   / |/| ./
+    J  |)'( |        ` F`.'/       $3 _
+$1  -<|  F         __     .-<        $3(_)
+$1    | /       .-'$3. $1`.  /$3-. $1L___
+    J \      <    $3\ $1 | | $5O$3\$1|.-' $3 _
+$1  _J \  .-    \$3/ $5O $3| $1| \  |$1F    $3(_)
+$1 '-F  -<_.     \   .-'  `-' L__
+__J  _   _.     >-'  $1)$4._.   $1|-'
+$1 `-|.'   /_.          $4\_|  $1 F
+  /.-   .                _.<
+ /'    /.'             .'  `\
+  /L  /'   |/      _.-'-\
+ /'J       ___.---'\|
+   |\  .--' V  | `. `
+   |/`. `-.     `._)
+      /.-.\
+      \ (  `\
+       `.\
+)";
+        return parseLogoArt(art);
+    }
+    if (logoName == "void2") {
+        std::string art =
+R"(
+    _______
+ _ \______ -
+| \  ___  \ |
+| | /   \ | |
+| | \___/ | |
+| \______ \_|
+ -_______\
+)";
+        return parseLogoArt(art);
+    }
     if (logoName == "unknown") {
         std::string art =
 R"(
@@ -849,6 +938,8 @@ int main(int argc, char* argv[]) {
         else if (dl.find("raspbian") != std::string::npos) logoName = "raspbian";
         else if (dl.find("uwuntu") != std::string::npos)   logoName = "uwuntu";
         else if (dl.find("void") != std::string::npos)     logoName = "void";
+        else if (dl.find("netbsd") != std::string::npos)   logoName = "netbsd";
+        else if (dl.find("openbsd") != std::string::npos)  logoName = "openbsd";
     }
 
     bool useSideBySide = cfg.logo && !logoName.empty() && getDifferentLogoLines(logoName).size() > 0;
