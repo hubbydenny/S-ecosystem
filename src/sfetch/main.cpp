@@ -343,19 +343,28 @@ void showplan9Logo(const std::string& color = colors::GREEN) {
               << colors::RESET;
 };
 
+static size_t visWidth(const std::string& s) {
+    size_t w = 0;
+    for (size_t i = 0; i < s.size(); i++) {
+        if (s[i] == '\033') { while (i < s.size() && s[i] != 'm') i++; continue; }
+        if ((unsigned char)s[i] >= 0xC0) continue;
+        w++;
+    }
+    return w;
+}
+
 static std::vector<std::string> parseLogoArt(const std::string& art) {
     std::vector<std::string> lines;
     std::istringstream ss(art);
     std::string raw;
     while (std::getline(ss, raw)) {
+        if (raw.empty()) continue;
         std::string line;
         for (size_t i = 0; i < raw.size(); i++) {
             if (raw[i] == '$' && i + 1 < raw.size() && raw[i + 1] >= '1' && raw[i + 1] <= '4') {
                 i++;
-            } else if (raw[i] == ' ') {
-                line += "  ";
             } else {
-                line += "██";
+                line += raw[i];
             }
         }
         lines.push_back(line);
@@ -823,26 +832,15 @@ int main(int argc, char* argv[]) {
 
         size_t maxLogoWidth = 0;
         for (const auto& l : logoLines) {
-            size_t vis = 0;
-            for (size_t i = 0; i < l.size(); i++) {
-                if ((unsigned char)l[i] >= 0xC0) continue;
-                if (l[i] == '\033') { while (i < l.size() && l[i] != 'm') i++; continue; }
-                vis++;
-            }
-            if (vis > maxLogoWidth) maxLogoWidth = vis;
+            size_t w = visWidth(l);
+            if (w > maxLogoWidth) maxLogoWidth = w;
         }
-        if (maxLogoWidth < 20) maxLogoWidth = 20;
 
         for (size_t i = 0; i < rows; i++) {
             if (i < maxLogo) {
                 std::cout << cfg.logocolor << logoLines[i] << colors::RESET;
-                size_t vis = 0;
-                for (size_t j = 0; j < logoLines[i].size(); j++) {
-                    if ((unsigned char)logoLines[i][j] >= 0xC0) continue;
-                    if (logoLines[i][j] == '\033') { while (j < logoLines[i].size() && logoLines[i][j] != 'm') j++; continue; }
-                    vis++;
-                }
-                if (vis < maxLogoWidth) std::cout << std::string(maxLogoWidth - vis, ' ');
+                size_t w = visWidth(logoLines[i]);
+                if (w < maxLogoWidth) std::cout << std::string(maxLogoWidth - w, ' ');
             } else {
                 std::cout << std::string(maxLogoWidth, ' ');
             }
