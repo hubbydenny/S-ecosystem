@@ -504,46 +504,51 @@ void showplan9Logo(const std::string& color = colors::GREEN) {
               << "  c\?\".UJ\n"
               << colors::RESET;
 };
-void showDifferentlogo(const std::string& distro) {
-    if (distro.find("Kiss") == std::string::npos) return;
+std::vector<std::string> getDifferentLogoLines(const std::string& distro) {
+    if (distro.find("Kiss") != std::string::npos) {
+        const char* K = "\033[40m  \033[0m";
+        const char* R = "\033[41m  \033[0m";
+        const char* W = "\033[47m  \033[0m";
+        const char* P = "\033[45m  \033[0m";
 
-    const char* K = "\033[40m  \033[0m";
-    const char* R = "\033[41m  \033[0m";
-    const char* W = "\033[47m  \033[0m";
-    const char* P = "\033[45m  \033[0m";
+        std::vector<std::vector<std::string>> art = {
+            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
+            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
+            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
+            {K,K,K,K,K,K,R,R,R,R,R,K,K,K,R,R,R,R,R,K,K,K,K,K,K},
+            {K,K,K,K,K,R,R,R,R,R,R,R,K,R,R,R,R,R,R,R,K,K,K,K,K},
+            {K,K,K,K,W,W,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K},
+            {K,K,K,P,W,W,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,P,K,K,K},
+            {K,K,W,K,W,W,R,R,W,W,W,W,W,W,W,W,W,W,W,R,R,R,W,K,K},
+            {K,K,W,K,K,R,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,R,W,K,K},
+            {K,K,K,K,R,R,R,W,W,W,W,W,W,W,W,W,W,W,W,W,W,R,R,K,K},
+            {K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K},
+            {K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K},
+            {K,K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K},
+            {K,K,K,K,K,K,K,R,R,R,R,W,W,W,W,W,R,R,R,R,K,K,K,K,K},
+            {K,K,K,K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K,K,K},
+            {K,K,K,K,K,K,K,K,K,K,R,R,R,R,R,R,R,K,K,K,K,K,K,K,K},
+            {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K}
+        };
 
-    std::vector<std::vector<std::string>> art = {
-        {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
-        {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
-        {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
-        {K,K,K,K,K,K,K,R,R,R,R,R,K,K,K,R,R,R,R,R,K,K,K,K,K,K},
-        {K,K,K,K,K,R,R,R,R,R,R,R,K,R,R,R,R,R,R,R,R,K,K,K,K,K},
-        {K,K,K,K,W,W,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K},
-        {K,K,K,P,W,W,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K},
-        {K,K,W,K,W,W,R,R,W,W,W,W,W,W,W,W,W,W,W,R,R,R,R,K,K,K},
-        {K,K,W,K,K,R,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,R,R,K,K,K},
-        {K,K,K,K,R,R,R,W,W,W,W,W,W,W,W,W,W,W,W,W,W,R,R,K,K,K},
-        {K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K},
-        {K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K},
-        {K,K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K,K},
-        {K,K,K,K,K,K,K,R,R,R,R,W,W,W,W,W,R,R,R,R,K,K,K,K,K,K},
-        {K,K,K,K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K,K,K,K},
-        {K,K,K,K,K,K,K,K,K,K,R,R,R,R,R,R,R,K,K,K,K,K,K,K,K,K},
-        {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K}
-    };
-
-    for (const auto& row : art) {
-        std::cout << "  ";
-        for (const auto& cell : row)
-            std::cout << cell;
-        std::cout << "\n";
+        std::vector<std::string> lines;
+        for (const auto& row : art) {
+            std::string line = "  ";
+            for (const auto& cell : row)
+                line += cell;
+            lines.push_back(line);
+        }
+        return lines;
     }
+    return {};
 }
 
 void showLogo(const std::string& color) {
     std::string distro = getDistro();
     if (distro.find("Kiss") != std::string::npos) {
-        showDifferentlogo(distro);
+        auto lines = getDifferentLogoLines(distro);
+        for (const auto& l : lines)
+            std::cout << l << "\n";
     } else {
         showplan9Logo(color);
     }
@@ -567,49 +572,78 @@ int main() {
     uname(&un);
     char hostname[256];
     gethostname(hostname, sizeof hostname);
-    if (cfg.logo) {
-    showLogo(cfg.logocolor);
-    } std::cout << colors::BOLD << hostname << "@" << un.sysname << colors::RESET << "\n";
-    if (cfg.line) {
-    std::cout << "=-=-=-=-=-=-=-=\n";
-    } if (cfg.os) {
-    showInfo("os", getDistro() + " " + getArchitecture(), cfg.textcolor);
-    } if(cfg.kernel) {
-    showInfo("kernel", std::string(un.release), cfg.textcolor);
-    } if (cfg.uptime) {
-    showInfo("uptime", humanUptime(info.uptime), cfg.textcolor);
-    } if (cfg.usedram) {
-    showInfo("ram", humanBytes(info.totalram - info.freeram)
-                + " / " + humanBytes(info.totalram), cfg.textcolor);
-    } if (cfg.fullram) {
-    showInfo("totalram", humanBytes(info.totalram), cfg.textcolor);
-    } if (cfg.procs) {
-    std::cout << cfg.textcolor<< "procs" << "  " << colors::RESET << info.procs << "\n";
-    } if (cfg.cpu) {
-    showInfo("cpu", getCPUModel(), cfg.textcolor);
-    } if (cfg.gpu){
-    showInfo("gpu", getGPUModel(), cfg.textcolor);
-    } if (cfg.shell) {
-    showInfo("shell", getShell(), cfg.textcolor);
-    } if (cfg.terminal) {
-    showInfo("terminal", getTerminal(), cfg.textcolor);
-    } if (cfg.resolution) {
-    showInfo("resolution", getResolution(), cfg.textcolor);
-    } if (cfg.packages) {
-    showInfo("packages", getPackages(), cfg.textcolor);
-    } if (cfg.de) {
-    showInfo("de", getDE(), cfg.textcolor);
-    } if (cfg.wm) {
-    showInfo("wm", getWM(), cfg.textcolor);
-    } if (cfg.init) {
-    showInfo("init", getInit(), cfg.textcolor);
-    } if (cfg.disk) {
-    showInfo("disk", GetDiskInfo(), cfg.textcolor);
-    } if (cfg.lastrun && !cfg.lastrunstr.empty()) {
-      std::cout << cfg.textcolor << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n"; 
-    }
-    if (cfg.blocks) {
-    printBlocks();
+
+    std::string distro = getDistro();
+    bool useSideBySide = cfg.logo && distro.find("Kiss") != std::string::npos;
+
+    if (useSideBySide) {
+        auto logoLines = getDifferentLogoLines(distro);
+
+        std::vector<std::string> infoLines;
+        auto addInfo = [&](const std::string& key, const std::string& val) {
+            infoLines.push_back(cfg.textcolor + key + colors::RESET + "  " + val);
+        };
+
+        infoLines.insert(infoLines.begin(), colors::BOLD + std::string(hostname) + "@" + un.sysname + colors::RESET);
+        if (cfg.line)
+            infoLines.insert(infoLines.begin() + 1, "=-=-=-=-=-=-=-=");
+        if (cfg.os)        addInfo("os", distro + " " + getArchitecture());
+        if (cfg.kernel)    addInfo("kernel", std::string(un.release));
+        if (cfg.uptime)    addInfo("uptime", humanUptime(info.uptime));
+        if (cfg.usedram)   addInfo("ram", humanBytes(info.totalram - info.freeram) + " / " + humanBytes(info.totalram));
+        if (cfg.fullram)   addInfo("totalram", humanBytes(info.totalram));
+        if (cfg.procs)     infoLines.push_back(cfg.textcolor + std::string("procs") + "  " + colors::RESET + std::to_string(info.procs));
+        if (cfg.cpu)       addInfo("cpu", getCPUModel());
+        if (cfg.gpu)       addInfo("gpu", getGPUModel());
+        if (cfg.shell)     addInfo("shell", getShell());
+        if (cfg.terminal)  addInfo("terminal", getTerminal());
+        if (cfg.resolution) addInfo("resolution", getResolution());
+        if (cfg.packages)  addInfo("packages", getPackages());
+        if (cfg.de)        addInfo("de", getDE());
+        if (cfg.wm)        addInfo("wm", getWM());
+        if (cfg.init)      addInfo("init", getInit());
+        if (cfg.disk)      addInfo("disk", GetDiskInfo());
+        if (cfg.lastrun && !cfg.lastrunstr.empty())
+            infoLines.push_back(cfg.textcolor + std::string("lastrun") + "  " + colors::RESET + cfg.lastrunstr);
+
+        size_t maxLogo = logoLines.size();
+        size_t maxInfo = infoLines.size();
+        size_t rows = maxLogo > maxInfo ? maxLogo : maxInfo;
+
+        for (size_t i = 0; i < rows; i++) {
+            if (i < maxLogo)
+                std::cout << logoLines[i];
+            else
+                std::cout << std::string(56, ' ');
+            std::cout << "  ";
+            if (i < maxInfo)
+                std::cout << infoLines[i];
+            std::cout << "\n";
+        }
+        if (cfg.blocks) printBlocks();
+    } else {
+        if (cfg.logo) showplan9Logo(cfg.logocolor);
+        std::cout << colors::BOLD << hostname << "@" << un.sysname << colors::RESET << "\n";
+        if (cfg.line) std::cout << "=-=-=-=-=-=-=-=\n";
+        if (cfg.os)        showInfo("os", distro + " " + getArchitecture(), cfg.textcolor);
+        if (cfg.kernel)    showInfo("kernel", std::string(un.release), cfg.textcolor);
+        if (cfg.uptime)    showInfo("uptime", humanUptime(info.uptime), cfg.textcolor);
+        if (cfg.usedram)   showInfo("ram", humanBytes(info.totalram - info.freeram) + " / " + humanBytes(info.totalram), cfg.textcolor);
+        if (cfg.fullram)   showInfo("totalram", humanBytes(info.totalram), cfg.textcolor);
+        if (cfg.procs)     std::cout << cfg.textcolor << "procs" << "  " << colors::RESET << info.procs << "\n";
+        if (cfg.cpu)       showInfo("cpu", getCPUModel(), cfg.textcolor);
+        if (cfg.gpu)       showInfo("gpu", getGPUModel(), cfg.textcolor);
+        if (cfg.shell)     showInfo("shell", getShell(), cfg.textcolor);
+        if (cfg.terminal)  showInfo("terminal", getTerminal(), cfg.textcolor);
+        if (cfg.resolution) showInfo("resolution", getResolution(), cfg.textcolor);
+        if (cfg.packages)  showInfo("packages", getPackages(), cfg.textcolor);
+        if (cfg.de)        showInfo("de", getDE(), cfg.textcolor);
+        if (cfg.wm)        showInfo("wm", getWM(), cfg.textcolor);
+        if (cfg.init)      showInfo("init", getInit(), cfg.textcolor);
+        if (cfg.disk)      showInfo("disk", GetDiskInfo(), cfg.textcolor);
+        if (cfg.lastrun && !cfg.lastrunstr.empty())
+            std::cout << cfg.textcolor << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n";
+        if (cfg.blocks) printBlocks();
     }
     try {
         toml::table t = toml::parse_file(path);             
