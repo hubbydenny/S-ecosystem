@@ -1,13 +1,10 @@
-# Object files
-*.o
 
-# Binaries
+*.o
 sfetch
 scat
 fastfetch
 a.out
 
-# CMake
 build/
 cmake-build-*/
 CMakeCache.txt
@@ -16,9 +13,6 @@ cmake_install.cmake
 CTestTestfile.cmake
 install_manifest.txt
 
-# Make artifacts
-
-# Editors / OS
 .idea/
 .vscode/
 *.swp
