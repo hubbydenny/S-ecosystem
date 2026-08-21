@@ -7,8 +7,8 @@
 #include <sys/utsname.h>
 #include <sys/sysinfo.h>
 #include <ctime>
-#include <color.h>
-#include <config.h>
+#include "../../src/helpers/color.h"
+#include "../../src/helpers/config.h"
 
 std::string currentTime() {
     std::time_t now = std::time(nullptr);
