@@ -16,13 +16,13 @@ target_include_directories(core PUBLIC src/helpers)
 add_library(toml INTERFACE)
 target_include_directories(toml INTERFACE external/tomlplusplus/include)
 
-# Готовые инструменты
+
 add_executable(sfetch src/sfetch/main.cpp)
 target_link_libraries(sfetch PRIVATE core toml)
 add_executable(scat src/cat/scat.cpp)
 target_link_libraries(scat PRIVATE core)
 
-# Заглушки (пока без main)
+
 # add_executable(s-kill src/s-kill/main.cpp)
 # add_executable(sls src/simple/ls.cpp)
 
