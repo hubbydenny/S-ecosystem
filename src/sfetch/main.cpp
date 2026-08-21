@@ -518,7 +518,7 @@ int main() {
     if (cfg.line) {
     std::cout << "=-=-=-=-=-=-=-=\n";
     } if (cfg.os) {
-    showInfo("os", getDistro(), cfg.textcolor);
+    showInfo("os", getDistro() + " " + getArchitecture(), cfg.textcolor);
     } if(cfg.kernel) {
     showInfo("kernel", std::string(un.release), cfg.textcolor);
     } if (cfg.uptime) {
@@ -548,8 +548,6 @@ int main() {
     showInfo("wm", getWM(), cfg.textcolor);
     } if (cfg.init) {
     showInfo("init", getInit(), cfg.textcolor);
-    } if (cfg.arch) {
-    showInfo("arch", getArchitecture(), cfg.textcolor);
     } if (cfg.disk) {
     showInfo("disk", GetDiskInfo(), cfg.textcolor);
     } if (cfg.lastrun && !cfg.lastrunstr.empty()) {
