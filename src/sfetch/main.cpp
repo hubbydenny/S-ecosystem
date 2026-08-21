@@ -8,8 +8,45 @@
 #include <cstring>
 #include <cctype>
 #include <sys/utsname.h>
+#ifdef __linux__
 #include <sys/sysinfo.h>
+#elif defined(__FreeBSD__) || defined(__DragonFly__)
+#include <sys/sysctl.h>
+#include <sys/user.h>
+#endif
 #include <sys/statvfs.h>
+
+struct SysStats {
+    long uptime = 0;
+    unsigned long long totalram = 0;
+    unsigned long long freeram = 0;
+    unsigned int procs = 0;
+};
+
+static bool getSysStats(SysStats& s) {
+#ifdef __linux__
+    struct sysinfo i;
+    if (sysinfo(&i) != 0) return false;
+    s.uptime = i.uptime;
+    s.totalram = i.totalram;
+    s.freeram = i.freeram;
+    s.procs = i.procs;
+    return true;
+#elif defined(__FreeBSD__) || defined(__DragonFly__)
+    struct timespec ts;
+    if (clock_gettime(CLOCK_UPTIME, &ts) == 0) s.uptime = ts.tv_sec;
+    size_t len = sizeof(s.totalram);
+    sysctlbyname("hw.physmem", &s.totalram, &len, nullptr, 0);
+    len = sizeof(s.freeram);
+    sysctlbyname("hw.usermem", &s.freeram, &len, nullptr, 0);
+    len = 0;
+    if (sysctlbyname("kern.proc.all", nullptr, &len, nullptr, 0) == 0)
+        s.procs = (unsigned)(len / sizeof(struct kinfo_proc));
+    return true;
+#else
+    return false;
+#endif
+}
 #include <ctime>
 #include "../../src/helpers/color.h"
 #include "../../src/helpers/config.h"
@@ -106,6 +143,20 @@ DiskInfo getDisk(const std::string& path) {
 }
 
 std::string getCPUModel() {
+#ifndef __linux__
+    {
+        FILE* p = popen("sysctl -n hw.model 2>/dev/null", "r");
+        if (p) {
+            char buf[256] = {0};
+            if (fgets(buf, sizeof buf, p)) {
+                pclose(p);
+                std::string m(buf);
+                while (!m.empty() && (m.back() == '\n' || m.back() == '\r' || m.back() == ' ')) m.pop_back();
+                if (!m.empty()) return m;
+            } else pclose(p);
+        }
+    }
+#endif
     std::ifstream file("/proc/cpuinfo");
     std::string line;
     while (std::getline(file, line)) {
@@ -380,11 +431,11 @@ static std::vector<std::string> parseLogoArt(const std::string& art) {
 
 std::vector<std::string> getDifferentLogoLines(const std::string& logoName) {
    if (logoName == "kiss" || logoName == "Kiss") {
-        const std::string R  = "\033[38;2;255;0;0m██";       
-        const std::string W  = "\033[38;2;255;255;255m██";   
-        const std::string P  = "\033[38;2;210;0;70m██";     
-        const std::string S  = "  ";                        
-        const std::string RS = "\033[0m";                    
+        const std::string R  = "\033[38;2;255;0;0m██";
+        const std::string W  = "\033[38;2;255;255;255m██";
+        const std::string P  = "\033[38;2;210;0;70m██";
+        const std::string S  = "  ";
+        const std::string RS = "\033[0m";
 
         const std::vector<std::string> logo = {
             S+S+S+S+S + R+R+R+R + S+S+S + R+R+R+R + S+S+S+S+S,
@@ -767,8 +818,8 @@ int main(int argc, char* argv[]) {
     ensureConfig(path);
     Config cfg = loadConfig(path);
 
-    struct sysinfo info;
-    if (sysinfo(&info) != 0) {
+    SysStats info;
+    if (!getSysStats(info)) {
         std::cerr << "Error retrieving system information\n";
         return 1;
     }
@@ -806,8 +857,12 @@ int main(int argc, char* argv[]) {
         auto logoLines = getDifferentLogoLines(logoName);
 
         std::vector<std::string> infoLines;
+        const size_t labelW = 10;
+        auto pad = [](const std::string& s, size_t w) {
+            return s.size() < w ? s + std::string(w - s.size(), ' ') : s;
+        };
         auto addInfo = [&](const std::string& key, const std::string& val) {
-            infoLines.push_back(cfg.textcolor + key + colors::RESET + "  " + val);
+            infoLines.push_back(cfg.textcolor + pad(key, labelW) + colors::RESET + " " + val);
         };
 
         infoLines.push_back(colors::BOLD + std::string(hostname) + "@" + un.sysname + colors::RESET);
@@ -817,7 +872,7 @@ int main(int argc, char* argv[]) {
         if (cfg.uptime)     addInfo("uptime", humanUptime(info.uptime));
         if (cfg.usedram)    addInfo("ram", humanBytes(info.totalram - info.freeram) + " / " + humanBytes(info.totalram));
         if (cfg.fullram)    addInfo("totalram", humanBytes(info.totalram));
-        if (cfg.procs)      infoLines.push_back(cfg.textcolor + std::string("procs") + "  " + colors::RESET + std::to_string(info.procs));
+        if (cfg.procs)      infoLines.push_back(cfg.textcolor + pad("procs", labelW) + colors::RESET + " " + std::to_string(info.procs));
         if (cfg.cpu)        addInfo("cpu", getCPUModel());
         if (cfg.gpu)        addInfo("gpu", getGPUModel());
         if (cfg.shell)      addInfo("shell", getShell());
@@ -829,7 +884,7 @@ int main(int argc, char* argv[]) {
         if (cfg.init)       addInfo("init", getInit());
         if (cfg.disk)       addInfo("disk", GetDiskInfo());
         if (cfg.lastrun && !cfg.lastrunstr.empty())
-            infoLines.push_back(cfg.textcolor + std::string("lastrun") + "  " + colors::RESET + cfg.lastrunstr);
+            infoLines.push_back(cfg.textcolor + pad("lastrun", labelW) + colors::RESET + " " + cfg.lastrunstr);
 
         size_t maxLogo = logoLines.size();
         size_t maxInfo = infoLines.size();

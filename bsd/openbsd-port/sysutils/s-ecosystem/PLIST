@@ -1,0 +1,4 @@
+@comment $OpenBSD$
+@bin bin/scat
+@bin bin/sfetch
+@bin bin/sls

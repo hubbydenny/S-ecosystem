@@ -1,0 +1,10 @@
+S-ecosystem is a set of shell utilities:
+
+- sfetch: system fetch with 20 distro logos, side-by-side layout
+  and automatic logo detection
+- scat: file concatenation utility
+- sls: simple ls utility
+
+Maintainer: hubbydenny <hubbydenny@users.noreply.github.com>
+
+WWW: https://github.com/hubbydenny/S-ecosystem
