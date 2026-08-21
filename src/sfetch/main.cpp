@@ -504,10 +504,51 @@ void showplan9Logo(const std::string& color = colors::GREEN) {
               << "  c\?\".UJ\n"
               << colors::RESET;
 };
-void showDifferentlogo() {
+void showDifferentlogo(const std::string& distro) {
+    if (distro.find("Kiss") == std::string::npos) return;
 
+    const char* K = "\033[40m  \033[0m";
+    const char* R = "\033[41m  \033[0m";
+    const char* W = "\033[47m  \033[0m";
+    const char* P = "\033[45m  \033[0m";
 
+    std::vector<std::vector<std::string>> art = {
+        {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
+        {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
+        {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K},
+        {K,K,K,K,K,K,K,R,R,R,R,R,K,K,K,R,R,R,R,R,K,K,K,K,K,K},
+        {K,K,K,K,K,R,R,R,R,R,R,R,K,R,R,R,R,R,R,R,R,K,K,K,K,K},
+        {K,K,K,K,W,W,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K},
+        {K,K,K,P,W,W,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K},
+        {K,K,W,K,W,W,R,R,W,W,W,W,W,W,W,W,W,W,W,R,R,R,R,K,K,K},
+        {K,K,W,K,K,R,W,W,W,W,W,W,W,W,W,W,W,W,W,W,W,R,R,K,K,K},
+        {K,K,K,K,R,R,R,W,W,W,W,W,W,W,W,W,W,W,W,W,W,R,R,K,K,K},
+        {K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K},
+        {K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K},
+        {K,K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K,K},
+        {K,K,K,K,K,K,K,R,R,R,R,W,W,W,W,W,R,R,R,R,K,K,K,K,K,K},
+        {K,K,K,K,K,K,K,K,R,R,R,R,R,R,R,R,R,R,R,K,K,K,K,K,K,K},
+        {K,K,K,K,K,K,K,K,K,K,R,R,R,R,R,R,R,K,K,K,K,K,K,K,K,K},
+        {K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K,K}
+    };
+
+    for (const auto& row : art) {
+        std::cout << "  ";
+        for (const auto& cell : row)
+            std::cout << cell;
+        std::cout << "\n";
+    }
 }
+
+void showLogo(const std::string& color) {
+    std::string distro = getDistro();
+    if (distro.find("Kiss") != std::string::npos) {
+        showDifferentlogo(distro);
+    } else {
+        showplan9Logo(color);
+    }
+}
+
 void showInfo(const std::string& key, const std::string& value, const std::string& color = colors::BLUE) {
     std::cout << color << key << colors::RESET << "  " << value << "\n";
 }
@@ -527,7 +568,7 @@ int main() {
     char hostname[256];
     gethostname(hostname, sizeof hostname);
     if (cfg.logo) {
-    showplan9Logo(cfg.logocolor);
+    showLogo(cfg.logocolor);
     } std::cout << colors::BOLD << hostname << "@" << un.sysname << colors::RESET << "\n";
     if (cfg.line) {
     std::cout << "=-=-=-=-=-=-=-=\n";
@@ -564,10 +605,11 @@ int main() {
     showInfo("init", getInit(), cfg.textcolor);
     } if (cfg.disk) {
     showInfo("disk", GetDiskInfo(), cfg.textcolor);
-    } if (cfg.blocks) {
-    printBlocks();
     } if (cfg.lastrun && !cfg.lastrunstr.empty()) {
       std::cout << cfg.textcolor << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n"; 
+    }
+    if (cfg.blocks) {
+    printBlocks();
     }
     try {
         toml::table t = toml::parse_file(path);             
@@ -575,5 +617,6 @@ int main() {
         t.insert("state", toml::table{});
         t["state"].as_table()->insert_or_assign("lastrun", currentTime());
         std::ofstream(path) << t;
-    } catch (const toml::parse_error& e) { std::cerr << "Error config fail" << std::endl; }  
+     } catch (const toml::parse_error& e) { std::cerr << "Error config fail" << std::endl; 
+   }  
 }
