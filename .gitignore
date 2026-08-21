@@ -17,7 +17,6 @@ CTestTestfile.cmake
 install_manifest.txt
 
 # Make artifacts
-Makefile
 
 # Editors / OS
 .idea/
