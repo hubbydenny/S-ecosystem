@@ -846,86 +846,29 @@ int main(int argc, char* argv[]) {
         else if (dl.find("void") != std::string::npos)     logoName = "void";
     }
 
-    bool useSideBySide = cfg.logo && !logoName.empty() && getDifferentLogoLines(logoName).size() > 0;
+    if (cfg.logo) showLogo(cfg.logocolor, logoName);
 
-    if (useSideBySide) {
-        auto logoLines = getDifferentLogoLines(logoName);
-
-        std::vector<std::string> infoLines;
-        auto addInfo = [&](const std::string& key, const std::string& val) {
-            infoLines.push_back(cfg.textcolor + key + colors::RESET + "  " + val);
-        };
-
-        infoLines.push_back(colors::BOLD + std::string(hostname) + "@" + un.sysname + colors::RESET);
-        if (cfg.line)
-            infoLines.push_back("=-=-=-=-=-=-=-=");
-        if (cfg.os)         addInfo("os", distro + " " + getArchitecture());
-        if (cfg.kernel)     addInfo("kernel", std::string(un.release));
-        if (cfg.uptime)     addInfo("uptime", humanUptime(info.uptime));
-        if (cfg.usedram)    addInfo("ram", humanBytes(info.totalram - info.freeram) + " / " + humanBytes(info.totalram));
-        if (cfg.fullram)    addInfo("totalram", humanBytes(info.totalram));
-        if (cfg.procs)      infoLines.push_back(cfg.textcolor + std::string("procs") + "  " + colors::RESET + std::to_string(info.procs));
-        if (cfg.cpu)        addInfo("cpu", getCPUModel());
-        if (cfg.gpu)        addInfo("gpu", getGPUModel());
-        if (cfg.shell)      addInfo("shell", getShell());
-        if (cfg.terminal)   addInfo("terminal", getTerminal());
-        if (cfg.resolution) addInfo("resolution", getResolution());
-        if (cfg.packages)   addInfo("packages", getPackages());
-        if (cfg.de)         addInfo("de", getDE());
-        if (cfg.wm)         addInfo("wm", getWM());
-        if (cfg.init)       addInfo("init", getInit());
-        if (cfg.disk)       addInfo("disk", GetDiskInfo());
-        if (cfg.lastrun && !cfg.lastrunstr.empty())
-            infoLines.push_back(cfg.textcolor + std::string("lastrun") + "  " + colors::RESET + cfg.lastrunstr);
-
-    size_t maxLogo = logoLines.size();
-        size_t maxInfo = infoLines.size(); 
-        size_t logoTopPadding = 5; 
-
-        size_t totalLogoRows = maxLogo + logoTopPadding;
-        size_t rows = totalLogoRows > maxInfo ? totalLogoRows : maxInfo;
-        const std::string emptyLogoSpace(44, ' '); 
-
-        for (size_t i = 0; i < rows; i++) {
-           
-            if (i >= logoTopPadding && (i - logoTopPadding) < maxLogo) {
-                std::cout << logoLines[i - logoTopPadding];
-            } else {
-                std::cout << emptyLogoSpace;
-            }
-
-            std::cout << "  ";
-
-            if (i < maxInfo)
-                std::cout << infoLines[i];
-
-            std::cout << "\n";
-        }
-        if (cfg.blocks) printBlocks(emptyLogoSpace + "  ");
-    } else {
-        if (cfg.logo) showLogo(cfg.logocolor, logoName);
-        std::cout << colors::BOLD << hostname << "@" << un.sysname << colors::RESET << "\n";
-        if (cfg.line) std::cout << "=-=-=-=-=-=-=-=\n";
-        if (cfg.os)         showInfo("os", distro + " " + getArchitecture(), cfg.textcolor);
-        if (cfg.kernel)     showInfo("kernel", std::string(un.release), cfg.textcolor);
-        if (cfg.uptime)     showInfo("uptime", humanUptime(info.uptime), cfg.textcolor);
-        if (cfg.usedram)    showInfo("ram", humanBytes(info.totalram - info.freeram) + " / " + humanBytes(info.totalram), cfg.textcolor);
-        if (cfg.fullram)    showInfo("totalram", humanBytes(info.totalram), cfg.textcolor);
-        if (cfg.procs)      std::cout << cfg.textcolor << "procs" << "  " << colors::RESET << info.procs << "\n";
-        if (cfg.cpu)        showInfo("cpu", getCPUModel(), cfg.textcolor);
-        if (cfg.gpu)        showInfo("gpu", getGPUModel(), cfg.textcolor);
-        if (cfg.shell)      showInfo("shell", getShell(), cfg.textcolor);
-        if (cfg.terminal)   showInfo("terminal", getTerminal(), cfg.textcolor);
-        if (cfg.resolution) showInfo("resolution", getResolution(), cfg.textcolor);
-        if (cfg.packages)   showInfo("packages", getPackages(), cfg.textcolor);
-        if (cfg.de)         showInfo("de", getDE(), cfg.textcolor);
-        if (cfg.wm)         showInfo("wm", getWM(), cfg.textcolor);
-        if (cfg.init)       showInfo("init", getInit(), cfg.textcolor);
-        if (cfg.disk)       showInfo("disk", GetDiskInfo(), cfg.textcolor);
-        if (cfg.lastrun && !cfg.lastrunstr.empty())
-            std::cout << cfg.textcolor << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n";
-        if (cfg.blocks) printBlocks();
-    }
+    std::cout << colors::BOLD << hostname << "@" << un.sysname << colors::RESET << "\n";
+    if (cfg.line) std::cout << "=-=-=-=-=-=-=-=\n";
+    if (cfg.os)         showInfo("os", distro + " " + getArchitecture(), cfg.textcolor);
+    if (cfg.kernel)     showInfo("kernel", std::string(un.release), cfg.textcolor);
+    if (cfg.uptime)     showInfo("uptime", humanUptime(info.uptime), cfg.textcolor);
+    if (cfg.usedram)    showInfo("ram", humanBytes(info.totalram - info.freeram) + " / " + humanBytes(info.totalram), cfg.textcolor);
+    if (cfg.fullram)    showInfo("totalram", humanBytes(info.totalram), cfg.textcolor);
+    if (cfg.procs)      std::cout << cfg.textcolor << "procs" << "  " << colors::RESET << info.procs << "\n";
+    if (cfg.cpu)        showInfo("cpu", getCPUModel(), cfg.textcolor);
+    if (cfg.gpu)        showInfo("gpu", getGPUModel(), cfg.textcolor);
+    if (cfg.shell)      showInfo("shell", getShell(), cfg.textcolor);
+    if (cfg.terminal)   showInfo("terminal", getTerminal(), cfg.textcolor);
+    if (cfg.resolution) showInfo("resolution", getResolution(), cfg.textcolor);
+    if (cfg.packages)   showInfo("packages", getPackages(), cfg.textcolor);
+    if (cfg.de)         showInfo("de", getDE(), cfg.textcolor);
+    if (cfg.wm)         showInfo("wm", getWM(), cfg.textcolor);
+    if (cfg.init)       showInfo("init", getInit(), cfg.textcolor);
+    if (cfg.disk)       showInfo("disk", GetDiskInfo(), cfg.textcolor);
+    if (cfg.lastrun && !cfg.lastrunstr.empty())
+        std::cout << cfg.textcolor << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n";
+    if (cfg.blocks) printBlocks();
 
     try {
         toml::table t = toml::parse_file(path);             
