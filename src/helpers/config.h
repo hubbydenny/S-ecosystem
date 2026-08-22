@@ -59,6 +59,7 @@ bool lastrun = true;
 bool blocks = false;
 std::string block_style = "square";
 int block_rows = 2;
+bool block_pairs = true;
 std::vector<std::string> block_colors; //square, rounded
 bool shell = true;
 bool terminal = true;
@@ -150,6 +151,7 @@ Config loadConfig(const std::string& path) {
         c.logocolor = resolveColor(n, colors::RESET);
         c.block_style = t["setup"]["block_style"].value_or(std::string("square"));
         c.block_rows = t["setup"]["block_rows"].value_or(c.block_rows);
+        c.block_pairs = t["setup"]["block_pairs"].value_or(c.block_pairs);
         if (auto arr = t["setup"]["block_colors"].as_array())
             for (auto& e : *arr)
                 if (auto s = e.value<std::string>())

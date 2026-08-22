@@ -408,8 +408,11 @@ std::string getArchitecture() {
 
 void printBlocks(const std::string& indent = "  ", const Config& cfg = Config{}) {
   bool rounded = (cfg.block_style == "rounded" || cfg.block_style == "circle");
+  static const char* DOT = "●●";
+  static const char* BLOCK = "███";
+  std::string dotStr = cfg.block_pairs ? DOT : std::string("●");
   auto cell = [&](const std::string& col) {
-    return col + (rounded ? "\u25cf\u25cf " : "\u2588\u2588\u2588") + colors::RESET;
+    return col + (rounded ? dotStr + " " : BLOCK) + colors::RESET;
   };
   std::vector<std::string> cells;
   if (cfg.block_colors.empty()) {
