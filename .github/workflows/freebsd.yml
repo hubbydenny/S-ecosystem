@@ -21,11 +21,12 @@ jobs:
           run: |
             gmake clean
             gmake CXX=clang++
-            echo "=== sfetch tests ==="
+            echo "=== sfetch ==="
             ./sfetch --logo freebsd
             ./sfetch --logo openbsd
             ./sfetch --logo void
-            echo "=== scat test ==="
-            echo "hello" | ./scat
-            echo "=== sls test ==="
-            ./sls /
+            echo "=== scat ==="
+            echo "hello scat" > /tmp/test.txt
+            ./scat /tmp/test.txt
+            echo "=== sls ==="
+            ./sls /tmp
