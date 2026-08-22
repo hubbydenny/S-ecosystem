@@ -387,6 +387,39 @@ std::string getInit() {
     return "Unknown";
 }
 
+std::string getBattery() {
+#ifdef __linux__
+    fs::path ps("/sys/class/power_supply");
+    if (!fs::is_directory(ps)) return "";
+    for (const auto& entry : fs::directory_iterator(ps)) {
+        std::string name = entry.path().filename().string();
+        if (name.find("BAT") != std::string::npos) {
+            std::string cap = trim(readFile(entry.path() / "capacity"));
+            std::string status = trim(readFile(entry.path() / "status"));
+            if (cap.empty()) return "";
+            return cap + "%" + (status.empty() ? "" : " [" + status + "]");
+        }
+    }
+    return "";
+#elif defined(__FreeBSD__) || defined(__DragonFly__)
+    std::string life = trim(command("sysctl -n hw.acpi.battery.life 2>/dev/null"));
+    if (life.empty()) return "";
+    std::string status = trim(command("sysctl -n hw.acpi.battery.state 2>/dev/null"));
+    std::string st;
+    if (status == "1") st = " [charging]";
+    else if (status == "2") st = " [discharging]";
+    return life + "%" + st;
+#elif defined(__OpenBSD__) || defined(__NetBSD__)
+    std::string life = trim(command("sysctl -n hw.acpi.battery.life 2>/dev/null"));
+    if (life.empty()) return "";
+    return life + "%";
+#else
+    return "";
+#endif
+}
+
+
+
 std::string getArchitecture() {
     struct utsname info{};
     if (uname(&info) != 0) return "Unknown";
@@ -1204,6 +1237,7 @@ int main(int argc, char* argv[]) {
         if (cfg.de)         addInfo("de", getDE());
         if (cfg.wm)         addInfo("wm", getWM());
         if (cfg.init)       addInfo("init", getInit());
+        if (cfg.battery) { std::string bat = getBattery(); if (!bat.empty()) addInfo("battery", bat); }
         if (cfg.disk)       addInfo("disk", GetDiskInfo());
         if (cfg.lastrun && !cfg.lastrunstr.empty())
             infoLines.push_back(cfg.textcolor + pad("lastrun", labelW) + colors::RESET + " " + cfg.lastrunstr);
@@ -1253,6 +1287,7 @@ int main(int argc, char* argv[]) {
         if (cfg.de)         showInfo("de", getDE(), cfg.textcolor);
         if (cfg.wm)         showInfo("wm", getWM(), cfg.textcolor);
         if (cfg.init)       showInfo("init", getInit(), cfg.textcolor);
+        if (cfg.battery) { std::string bat = getBattery(); if (!bat.empty()) showInfo("battery", bat, cfg.textcolor); }
         if (cfg.disk)       showInfo("disk", GetDiskInfo(), cfg.textcolor);
         if (cfg.lastrun && !cfg.lastrunstr.empty())
             std::cout << cfg.textcolor << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n";

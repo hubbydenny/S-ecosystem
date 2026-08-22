@@ -69,6 +69,7 @@ bool packages = true;
 bool de = true;
 bool wm = true;
 bool init = true;
+bool battery = true;
 std::string textcolor = colors::BLUE;
 std::string logocolor = colors::RESET;
 std::string lastrunstr;
@@ -145,6 +146,7 @@ Config loadConfig(const std::string& path) {
         c.de = t["setup"]["de"].value_or(c.de);
         c.wm = t["setup"]["wm"].value_or(c.wm);
         c.init = t["setup"]["init"].value_or(c.init);
+        c.battery = t["setup"]["battery"].value_or(c.battery);
         c.lastrunstr = t["state"]["lastrun"].value_or(c.lastrunstr);
 
         std::string n = t["colors"]["logocolor"].value_or(std::string("white"));
