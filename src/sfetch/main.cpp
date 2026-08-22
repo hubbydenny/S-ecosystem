@@ -413,10 +413,19 @@ void printBlocks(const std::string& indent = "  ", const Config& cfg = Config{})
   };
   std::vector<std::string> cells;
   if (cfg.block_colors.empty()) {
-    for (int i = 0; i < 8; ++i)
-      cells.push_back(std::string("\033[") + std::to_string(rounded ? 30 + i : 40 + i) + "m" + (rounded ? "" : "   ") + (rounded ? "\u25cf\u25cf " : "") + colors::RESET);
-    for (int i = 0; i < 8; ++i)
-      cells.push_back(std::string("\033[") + std::to_string(rounded ? 90 + i : 100 + i) + "m" + (rounded ? "" : "   ") + (rounded ? "\u25cf\u25cf " : "") + colors::RESET);
+    static const char* def_rounded[16] = {
+        "red", "orange", "yellow", "lime", "aqua", "skyblue", "purple", "hotpink",
+        "lightpink", "lightorange", "gold", "olive", "turquoise", "lightblue", "lpurple", "silver"
+    };
+    if (rounded) {
+      for (int i = 0; i < 16; ++i)
+        cells.push_back(cell(resolveColor(def_rounded[i], colors::RESET)));
+    } else {
+      for (int i = 0; i < 8; ++i)
+        cells.push_back(std::string("\033[") + std::to_string(40 + i) + "m" + "   " + colors::RESET);
+      for (int i = 0; i < 8; ++i)
+        cells.push_back(std::string("\033[") + std::to_string(100 + i) + "m" + "   " + colors::RESET);
+    }
   } else {
     for (const auto& n : cfg.block_colors)
       cells.push_back(cell(resolveColor(n, colors::RESET)));
