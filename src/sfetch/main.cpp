@@ -406,24 +406,29 @@ std::string getArchitecture() {
     return arch;
 }
 
-void printBlocks(const std::string& indent = "  ", const std::string& style = "square") {
-  if (style == "rounded" || style == "circle") {
-    std::cout << indent;
+void printBlocks(const std::string& indent = "  ", const Config& cfg = Config{}) {
+  bool rounded = (cfg.block_style == "rounded" || cfg.block_style == "circle");
+  auto cell = [&](const std::string& col) {
+    return col + (rounded ? "\u25cf\u25cf " : "\u2588\u2588\u2588") + colors::RESET;
+  };
+  std::vector<std::string> cells;
+  if (cfg.block_colors.empty()) {
     for (int i = 0; i < 8; ++i)
-      std::cout << "\033[" << (30 + i) << "m" << "\u25cf\u25cf " ;
-    std::cout << colors::RESET << "\n" << indent;
+      cells.push_back(std::string("\033[") + std::to_string(rounded ? 30 + i : 40 + i) + "m" + (rounded ? "" : "   ") + (rounded ? "\u25cf\u25cf " : "") + colors::RESET);
     for (int i = 0; i < 8; ++i)
-      std::cout << "\033[" << (90 + i) << "m" << "\u25cf\u25cf ";
-    std::cout << colors::RESET << "\n";
-    return;
+      cells.push_back(std::string("\033[") + std::to_string(rounded ? 90 + i : 100 + i) + "m" + (rounded ? "" : "   ") + (rounded ? "\u25cf\u25cf " : "") + colors::RESET);
+  } else {
+    for (const auto& n : cfg.block_colors)
+      cells.push_back(cell(resolveColor(n, colors::RESET)));
   }
-  std::cout << indent;
-  for (int i = 0; i < 8; ++i)
-    std::cout << "\033[" << (40 + i) << "m" << "   ";
-  std::cout << colors::RESET << "\n" << indent;
-  for (int i = 0; i < 8; ++i)
-    std::cout << "\033[" << (100 + i) << "m" << "   ";
-  std::cout << colors::RESET << "\n";
+  int rows = cfg.block_rows > 0 ? cfg.block_rows : 2;
+  size_t per_row = (cells.size() + rows - 1) / rows;
+  for (size_t r = 0; r < cells.size(); r += per_row) {
+    std::cout << indent;
+    for (size_t i = r; i < std::min(r + per_row, cells.size()); ++i)
+      std::cout << cells[i];
+    std::cout << "\n";
+  }
 }
 
 std::string humanUptime(long seconds) {
@@ -1216,7 +1221,7 @@ int main(int argc, char* argv[]) {
             if (i < maxInfo) std::cout << infoLines[i];
             std::cout << "\n";
         }
-        if (cfg.blocks) printBlocks(std::string(maxLogoWidth + 2, ' '), cfg.block_style);
+        if (cfg.blocks) printBlocks(std::string(maxLogoWidth + 2, ' '), cfg);
     } else {
         if (cfg.logo) showLogo(cfg.logocolor, logoName);
         std::cout << colors::BOLD << hostname << "@" << un.sysname << colors::RESET << "\n";
@@ -1239,7 +1244,7 @@ int main(int argc, char* argv[]) {
         if (cfg.disk)       showInfo("disk", GetDiskInfo(), cfg.textcolor);
         if (cfg.lastrun && !cfg.lastrunstr.empty())
             std::cout << cfg.textcolor << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n";
-        if (cfg.blocks) printBlocks("  ", cfg.block_style);
+        if (cfg.blocks) printBlocks("  ", cfg);
     }
 
     try {

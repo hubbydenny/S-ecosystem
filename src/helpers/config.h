@@ -57,7 +57,9 @@ bool fullram = false;
 bool freeram = false;
 bool lastrun = true;
 bool blocks = false;
-std::string block_style = "square"; //square, rounded
+std::string block_style = "square";
+int block_rows = 2;
+std::vector<std::string> block_colors; //square, rounded
 bool shell = true;
 bool terminal = true;
 bool resolution = true;
@@ -147,6 +149,11 @@ Config loadConfig(const std::string& path) {
         std::string n = t["colors"]["logocolor"].value_or(std::string("white"));
         c.logocolor = resolveColor(n, colors::RESET);
         c.block_style = t["setup"]["block_style"].value_or(std::string("square"));
+        c.block_rows = t["setup"]["block_rows"].value_or(c.block_rows);
+        if (auto arr = t["setup"]["block_colors"].as_array())
+            for (auto& e : *arr)
+                if (auto s = e.value<std::string>())
+                    c.block_colors.push_back(*s);
         std::string g = t["colors"]["textcolor"].value_or(std::string("blue"));
         c.textcolor = resolveColor(g, colors::RESET);
     } catch (const toml::parse_error& e) {
