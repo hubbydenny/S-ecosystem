@@ -85,14 +85,11 @@ TOML config at `~/.config/sfetch/config.toml`:
 ```toml
 [colors]
 title = "bright_green"
-subtitle = "bright_cyan"
-values = "bright_white"
-labels = "bright_blue"
 colors = "bright_green"
 
 [display]
-show_colors = true
-show_logo = true
+colors = true
+logo = true
 ```
 
 ## Build
