@@ -15,14 +15,17 @@ jobs:
       - name: Test on FreeBSD
         uses: vmactions/freebsd-vm@v1
         with:
-          version: "14.2"
+          release: "14.2"
           prepare: |
             pkg install -y gmake
           run: |
             gmake clean
             gmake CXX=clang++
+            echo "=== sfetch tests ==="
             ./sfetch --logo freebsd
             ./sfetch --logo openbsd
             ./sfetch --logo void
-            ./scat --help
-            ./sls --help
+            echo "=== scat test ==="
+            echo "hello" | ./scat
+            echo "=== sls test ==="
+            ./sls /
