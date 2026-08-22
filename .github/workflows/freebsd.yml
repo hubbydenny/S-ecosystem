@@ -20,7 +20,7 @@ jobs:
             pkg install -y gmake
           run: |
             gmake clean
-            gmake
+            gmake CXX=clang++
             ./sfetch --logo freebsd
             ./sfetch --logo openbsd
             ./sfetch --logo void
