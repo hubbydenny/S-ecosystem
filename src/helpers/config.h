@@ -56,6 +56,7 @@ bool fullram = false;
 bool freeram = false;
 bool lastrun = true;
 bool blocks = false;
+std::string block_style = "square";
 bool shell = true;
 bool terminal = true;
 bool resolution = true;
@@ -120,6 +121,7 @@ Config loadConfig(const std::string& path) {
         else if (n == "gray5" || n == "grey5") c.logocolor = colors::GRAY_5;
         else if (n == "gray" || n == "grey") c.logocolor = colors::GRAY_3;
 else                   c.logocolor = colors::RESET;
+        c.block_style = t["setup"]["block_style"].value_or(std::string("square"));
         std::string g = t["colors"]["textcolor"].value_or(std::string("blue"));
         if      (g == "green") c.textcolor = colors::GREEN;
         else if (g == "blue")  c.textcolor = colors::BLUE;

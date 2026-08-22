@@ -406,7 +406,17 @@ std::string getArchitecture() {
     return arch;
 }
 
-void printBlocks(const std::string& indent = "  ") {
+void printBlocks(const std::string& indent = "  ", const std::string& style = "square") {
+  if (style == "rounded" || style == "circle") {
+    std::cout << indent;
+    for (int i = 0; i < 8; ++i)
+      std::cout << "\033[" << (30 + i) << "m" << "\u25cf\u25cf " ;
+    std::cout << colors::RESET << "\n" << indent;
+    for (int i = 0; i < 8; ++i)
+      std::cout << "\033[" << (90 + i) << "m" << "\u25cf\u25cf ";
+    std::cout << colors::RESET << "\n";
+    return;
+  }
   std::cout << indent;
   for (int i = 0; i < 8; ++i)
     std::cout << "\033[" << (40 + i) << "m" << "   ";
@@ -763,13 +773,13 @@ R"(
 R"(
         ,'''''.  
        |   ,.  | 
-       |  |  '_' 
+       |  |  |.| 
   ,....|  |..   
 .'  ,_;|   ..'   
 |  |   |  |      
 |  ',_,'  |      
  '.     ,'       
-   '''''         "
+   '''''         
 )"; return parseLogoArt(art);
   }
 if (logoName == "ubuntu" || logoName == "Ubuntu") {
@@ -950,26 +960,61 @@ R"(
     if (logoName == "netbsd" || logoName == "Netbsd" || logoName == "NetBsd") {
         std::string art =
 R"(
-$1                     `-/oshdmNMNdhyo+:-`
-$2y$1/s+:-``    `.-:+oydNMMMMNhs/-``
-$2-m+$1NMMMMMMMMMMMMMMMMMMMNdhmNMMMmdhs+/-`
- $2-m+$1NMMMMMMMMMMMMMMMMMMMMmy+:`
-  $2-N/$1dMMMMMMMMMMMMMMMds:`
-   $2-N/$1hMMMMMMMMMmho:`
-    $2-N/$1-:/++/:.`
-$2     :M+
-      :Mo
-       :Ms
-        :Ms
-         :Ms
-          :Ms
-           :Ms
-            :Ms
-             :Ms
-              :Ms
+                    xxxxxxxxxxxxxxxxxxx
+                 xxxxxxxxxxxxxxxxxxxxxxxxx
+               xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+             xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx:
+           xxxxxxxxxxxxxxxxxxxxxxxxxxxxx+;..:+xx
+          xxxxxxxxxxxxxxxxxxxxxx:...........+xxxx
+           +xxxxxxxxxxxxx+............xxxxxxxxxxxx
+         x........................;..............xx
+        x.x.............................xxxxxxxxxxx
+       :xx.x.......................:xxxxxxxxxxxxxxxx
+       xxxx.x...................xxxxxxxxxxxxxxxxxxxx
+       xxxx:.x..............xxxxxxxxxxxxxxxxxxxxxxxx
+       xxxxx..xxx....:xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+       :xxxxx..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        xxxxxx..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+        ;xxxxxx..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+         xxxxxxx..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+          xxxxxxx..xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+           xxxxxx+..xxxxxxxxxxxxxxxxxxxxxxxxxxxx
+             xxxxx:..xxxxxxxxxxxxxxxxxxxxxxxxx
+               xxxx...xxxxxxxxxxxxxxxxxxxxxx:
+                 xxx...xxxxxxxxxxxxxxxxxxx
+                    ;...xxxxxxxxxxxxxxx
+                           ;xxx;
 )";
         return parseLogoArt(art);
     }
+if (logoName == "Endeavour" || logoName == "endeavour") {
+      std::string art =
+  R"(
+                    ≈ 
+                   √≈≈
+                  √≈≈≈∞
+                 √√≈≈≈≈√
+                 √≈≈≈≈≈≈π
+                √∞≈≈≈≈≈≈√√
+               π√≈≈≈≈≈≈≈≈√
+              √√≈≈≈≈≈≈≈≈≈∞√
+             √√∞≈≈≈≈≈≈≈≈≈≈√√
+             √√≈≈≈≈≈≈≈≈≈≈≈∞√
+            √√≈≈≈≈≈≈≈≈≈≈≈≈≈√π
+           √√√≈≈≈≈≈≈≈≈≈≈≈≈≈√√
+          √√√≈≈≈≈≈≈≈≈≈≈≈≈≈≈√√
+         √√√∞≈≈≈≈≈≈≈≈≈≈≈≈≈≈√√π
+         √√√≈≈≈≈≈≈≈≈≈≈≈≈≈≈∞√√√
+           √∞∞∞≈≈≈≈≈≈≈≈≈≈∞√√√
+          √√√√√√√√√√√√√√√√√√√
+          √√√√√√√√√√√√√√ππ
+      ╔═╗┌┐┌┌┬┐┌─┐┌─┐┬  ┬┌─┐┬ ┬┬─┐
+      ║╣ │││ ││├┤ ├─┤└┐┌┘│ ││ │├┬┘
+      ╚═╝┘└┘─┴┘└─┘┴ ┴ └┘ └─┘└─┘┴└─
+                             
+  )";
+  return parseLogoArt(art);
+}
     if (logoName == "openbsd") {
         std::string art =
 R"(
@@ -999,7 +1044,7 @@ $1 `-|.'   /_.          $4\_|  $1 F
 )";
         return parseLogoArt(art);
     }
-    if (logoName == "FreeBSD") {
+    if (logoName == "FreeBSD" || logoName == "freebsd") {
         std::string art = 
 R"(                                                                                                 
 ```                        $2`
@@ -1021,7 +1066,7 @@ R"(
 )";
         return parseLogoArt(art);
     }
-    if (logoName == "Unknown") {
+    if (logoName == "Unknown" || logoName == "unknown") {
         std::string art =
 R"(
 
@@ -1171,7 +1216,7 @@ int main(int argc, char* argv[]) {
             if (i < maxInfo) std::cout << infoLines[i];
             std::cout << "\n";
         }
-        if (cfg.blocks) printBlocks(std::string(maxLogoWidth + 2, ' '));
+        if (cfg.blocks) printBlocks(std::string(maxLogoWidth + 2, ' '), cfg.block_style);
     } else {
         if (cfg.logo) showLogo(cfg.logocolor, logoName);
         std::cout << colors::BOLD << hostname << "@" << un.sysname << colors::RESET << "\n";
@@ -1194,7 +1239,7 @@ int main(int argc, char* argv[]) {
         if (cfg.disk)       showInfo("disk", GetDiskInfo(), cfg.textcolor);
         if (cfg.lastrun && !cfg.lastrunstr.empty())
             std::cout << cfg.textcolor << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n";
-        if (cfg.blocks) printBlocks();
+        if (cfg.blocks) printBlocks("  ", cfg.block_style);
     }
 
     try {
@@ -1206,4 +1251,5 @@ int main(int argc, char* argv[]) {
     } catch (const toml::parse_error& e) {
         std::cerr << "Error config fail\n";
     }  
-}
+} 
+
