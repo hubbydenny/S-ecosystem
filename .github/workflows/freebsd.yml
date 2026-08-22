@@ -1,0 +1,28 @@
+name: FreeBSD CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  freebsd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Test on FreeBSD
+        uses: vmactions/freebsd-vm@v1
+        with:
+          version: "14.2"
+          prepare: |
+            pkg install -y gmake
+          run: |
+            gmake clean
+            gmake
+            ./sfetch --logo freebsd
+            ./sfetch --logo openbsd
+            ./sfetch --logo void
+            ./scat --help
+            ./sls --help
