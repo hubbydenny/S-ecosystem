@@ -1,5 +1,6 @@
 #pragma once
 #include <filesystem>
+#include <map>
 #include <fstream>
 #include <toml++/toml.hpp>
 #include <color.h>
@@ -56,7 +57,7 @@ bool fullram = false;
 bool freeram = false;
 bool lastrun = true;
 bool blocks = false;
-std::string block_style = "square";
+std::string block_style = "square"; //square, rounded
 bool shell = true;
 bool terminal = true;
 bool resolution = true;
@@ -70,6 +71,50 @@ std::string logocolor = colors::RESET;
 std::string lastrunstr;
 //bool shell = true;::
 };
+
+static const std::map<std::string, std::string> kColorNames = {
+    {"black", colors::BLACK}, {"red", colors::RED}, {"green", colors::GREEN},
+    {"yellow", colors::YELLOW}, {"blue", colors::BLUE}, {"magenta", colors::MAGENTA},
+    {"cyan", colors::CYAN}, {"white", colors::WHITE},
+    {"brightblack", colors::BRIGHT_BLACK}, {"brightred", colors::BRIGHT_RED},
+    {"brightgreen", colors::BRIGHT_GREEN}, {"brightyellow", colors::BRIGHT_YELLOW},
+    {"brightblue", colors::BRIGHT_BLUE}, {"brightmagenta", colors::BRIGHT_MAGENTA},
+    {"brightcyan", colors::BRIGHT_CYAN}, {"brightwhite", colors::BRIGHT_WHITE},
+    {"bgblack", colors::BG_BLACK}, {"bgred", colors::BG_RED},
+    {"bggreen", colors::BG_GREEN}, {"bgyellow", colors::BG_YELLOW},
+    {"bgblue", colors::BG_BLUE}, {"bgmagenta", colors::BG_MAGENTA},
+    {"bgcyan", colors::BG_CYAN}, {"bgwhite", colors::BG_WHITE},
+    {"bgbrightblack", colors::BG_BRIGHT_BLACK}, {"bgbrightred", colors::BG_BRIGHT_RED},
+    {"bgbrightgreen", colors::BG_BRIGHT_GREEN}, {"bgbrightyellow", colors::BG_BRIGHT_YELLOW},
+    {"bgbrightblue", colors::BG_BRIGHT_BLUE}, {"bgbrightmagenta", colors::BG_BRIGHT_MAGENTA},
+    {"bgbrightcyan", colors::BG_BRIGHT_CYAN}, {"bgbrightwhite", colors::BG_BRIGHT_WHITE},
+    {"gray1", colors::GRAY_1}, {"grey1", colors::GRAY_1},
+    {"gray2", colors::GRAY_2}, {"grey2", colors::GRAY_2},
+    {"gray3", colors::GRAY_3}, {"grey3", colors::GRAY_3},
+    {"gray4", colors::GRAY_4}, {"grey4", colors::GRAY_4},
+    {"gray5", colors::GRAY_5}, {"grey5", colors::GRAY_5},
+    {"gray", colors::GRAY_3}, {"grey", colors::GRAY_3},
+    {"orange", colors::ORANGE}, {"darkorange", colors::DARK_ORANGE},
+    {"lightorange", colors::LIGHT_ORANGE},
+    {"pink", colors::PINK}, {"lightpink", colors::LIGHT_PINK},
+    {"hotpink", colors::HOT_PINK},
+    {"purple", colors::PURPLE}, {"darkpurple", colors::DARK_PURPLE},
+    {"lightpurple", colors::LIGHT_PURPLE}, {"lpurple", colors::LIGHT_PURPLE},
+    {"lime", colors::LIME}, {"seagreen", colors::SEA_GREEN}, {"olive", colors::OLIVE},
+    {"lightblue", colors::LIGHT_BLUE}, {"darkblue", colors::DARK_BLUE},
+    {"skyblue", colors::SKY_BLUE},
+    {"darkred", colors::DARK_RED}, {"crimson", colors::CRIMSON}, {"salmon", colors::SALMON},
+    {"brown", colors::BROWN}, {"darkbrown", colors::DARK_BROWN},
+    {"chocolate", colors::CHOCOLATE},
+    {"turquoise", colors::TURQUOISE}, {"aqua", colors::AQUA},
+    {"teal", colors::TEAL}, {"gold", colors::GOLD}, {"silver", colors::SILVER},
+};
+
+static std::string resolveColor(const std::string& name, const char* fallback) {
+    auto it = kColorNames.find(name);
+    return it != kColorNames.end() ? it->second : fallback;
+}
+
 Config loadConfig(const std::string& path) {
     Config c;
     std::ifstream f(path);
@@ -100,50 +145,10 @@ Config loadConfig(const std::string& path) {
         c.lastrunstr = t["state"]["lastrun"].value_or(c.lastrunstr);
 
         std::string n = t["colors"]["logocolor"].value_or(std::string("white"));
-        if      (n == "green") c.logocolor = colors::GREEN;
-        else if (n == "blue")  c.logocolor = colors::BLUE;
-        else if (n == "white") c.logocolor = colors::WHITE;
-        else if (n == "pink")  c.logocolor = colors::PINK;
-        else if (n == "yellow") c.logocolor = colors::YELLOW;
-        else if (n == "black") c.logocolor = colors::BLACK;
-        else if (n == "bgbrightyellow") c.logocolor = colors::BG_BRIGHT_YELLOW;
-        else if (n == "cyan") c.logocolor = colors::CYAN;
-        else if (n == "brown" || n == "chocolate") c.logocolor = colors::CHOCOLATE;
-        else if (n == "red") c.logocolor = colors::RED;
-        else if (n == "lpurple") c.logocolor = colors::LIGHT_PURPLE;
-        else if (n == "purple") c.logocolor = colors::PURPLE;
-        else if (n == "aqua") c.logocolor = colors::AQUA;
-        else if (n == "magenta") c.logocolor = colors::MAGENTA;
-                else if (n == "gray1" || n == "grey1") c.logocolor = colors::GRAY_1;
-        else if (n == "gray2" || n == "grey2") c.logocolor = colors::GRAY_2;
-        else if (n == "gray3" || n == "grey3") c.logocolor = colors::GRAY_3;
-        else if (n == "gray4" || n == "grey4") c.logocolor = colors::GRAY_4;
-        else if (n == "gray5" || n == "grey5") c.logocolor = colors::GRAY_5;
-        else if (n == "gray" || n == "grey") c.logocolor = colors::GRAY_3;
-else                   c.logocolor = colors::RESET;
+        c.logocolor = resolveColor(n, colors::RESET);
         c.block_style = t["setup"]["block_style"].value_or(std::string("square"));
         std::string g = t["colors"]["textcolor"].value_or(std::string("blue"));
-        if      (g == "green") c.textcolor = colors::GREEN;
-        else if (g == "blue")  c.textcolor = colors::BLUE;
-        else if (g == "white") c.textcolor = colors::WHITE;
-        else if (g == "pink")  c.textcolor = colors::PINK;
-        else if (g == "yellow") c.textcolor = colors::YELLOW;
-        else if (g == "black") c.textcolor = colors::BLACK;
-        else if (g == "bgbrightyellow") c.textcolor = colors::BG_BRIGHT_YELLOW;
-        else if (g == "cyan") c.textcolor = colors::CYAN;
-        else if (g == "brown" || g == "chocolate") c.textcolor = colors::CHOCOLATE;
-        else if (g == "red") c.textcolor = colors::RED;
-        else if (g == "lpurple") c.textcolor = colors::LIGHT_PURPLE;
-        else if (g == "purple") c.textcolor = colors::PURPLE;
-        else if (g == "aqua") c.textcolor = colors::AQUA;
-        else if (g == "magenta") c.textcolor = colors::MAGENTA;
-                else if (g == "gray1" || g == "grey1") c.textcolor = colors::GRAY_1;
-        else if (g == "gray2" || g == "grey2") c.textcolor = colors::GRAY_2;
-        else if (g == "gray3" || g == "grey3") c.textcolor = colors::GRAY_3;
-        else if (g == "gray4" || g == "grey4") c.textcolor = colors::GRAY_4;
-        else if (g == "gray5" || g == "grey5") c.textcolor = colors::GRAY_5;
-        else if (g == "gray" || g == "grey") c.textcolor = colors::GRAY_3;
-else                   c.textcolor = colors::RESET;
+        c.textcolor = resolveColor(g, colors::RESET);
     } catch (const toml::parse_error& e) {
         std::cerr << "!!error_error_config_error!!: " << e.description() << "\n";
     }
