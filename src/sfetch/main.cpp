@@ -407,7 +407,7 @@ std::string getBattery() {
     std::string status = trim(command("sysctl -n hw.acpi.battery.state 2>/dev/null"));
     std::string st;
     if (status == "1") st = " [charging]";
-    else if (status == "2") st = " [discharging]";
+    else if (status == "2") st = "";
     return life + "%" + st;
 #elif defined(__OpenBSD__) || defined(__NetBSD__)
     std::string life = trim(command("sysctl -n hw.acpi.battery.life 2>/dev/null"));
