@@ -127,7 +127,7 @@ std::string getTerminal() { const char* vars[] = {
 std::string getResolution() {
   std::string result = command("xrandr 2>/dev/null | grep -oE '[0-9]+x[0-9]+\\+[0-9]+\\+[0-9]+' | head>
   if (!result.empty()) return result;
-  result = command("wlr-randr | awk '/current/ {print $1, $3 "); //fixed wlr that not shows resolut
+  result = command("wlr-randr | awk '/current/ {print $1, $3} '"); //fixed wlr that not shows resolut
   if (!result.empty()) return result;
   return "Unknown";
 };
