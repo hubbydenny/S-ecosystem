@@ -7,3 +7,6 @@
 [] post to github;
 [] post to all packet managers
 -> github.com/hubbydenny/S-ecosystem <-
+[] add new gpu checker
+[] fix bad ram
+[] fix procs
