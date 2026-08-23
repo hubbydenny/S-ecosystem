@@ -125,9 +125,9 @@ std::string getTerminal() { const char* vars[] = {
 };
 
 std::string getResolution() {
-  std::string result = command("xrandr 2>/dev/null | grep -oE '[0-9]+x[0-9]+\\+[0-9]+\\+[0-9]+' | head -n1 | cut -d '+' -f1");
+  std::string result = command("xrandr 2>/dev/null | grep -oE '[0-9]+x[0-9]+\\+[0-9]+\\+[0-9]+' | head>
   if (!result.empty()) return result;
-  result = command("wayland-info 2>/dev/null | grep -m1 -oE '[0-9]+x[0-9]+'");
+  result = command("wlr-randr | awk '/current/ {print $1, $3 "); //fixed wlr that not shows resolut
   if (!result.empty()) return result;
   return "Unknown";
 };
@@ -207,7 +207,7 @@ std::string getGPUModel() {
                 if (id == "15ad") return "VMware";
                 if (id == "80ee") return "VirtualBox";
                 return "Unknown GPU";
-            }
+            } //need to make it with lspci | grep -E "VGA|3D" | sed 's/.*controller: 
             pclose(p);
         }
     }
