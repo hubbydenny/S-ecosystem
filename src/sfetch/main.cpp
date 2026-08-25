@@ -31,9 +31,31 @@ static bool getSysStats(SysStats& s) {
     struct sysinfo i;
     if (sysinfo(&i) != 0) return false;
     s.uptime = i.uptime;
-    s.totalram = i.totalram;
-    s.freeram = i.freeram;
-    s.procs = i.procs;
+    {
+        unsigned n = 0;
+        for (auto& e : std::filesystem::directory_iterator("/proc")) {
+            std::string nm = e.path().filename().string();
+            if (!nm.empty() && isdigit((unsigned char)nm[0])) n++;
+        }
+        s.procs = n;
+    }
+    {
+        unsigned long long total = 0, avail = 0;
+        std::ifstream m("/proc/meminfo");
+        std::string line;
+        while (std::getline(m, line)) {
+            bool is_total = line.rfind("MemTotal:", 0) == 0;
+            bool is_avail = line.rfind("MemAvailable:", 0) == 0;
+            if (!is_total && !is_avail) continue;
+            unsigned long long val = 0; bool started = false;
+            for (char c : line) {
+                if (isdigit((unsigned char)c)) { started = true; val = val * 10 + (c - '0'); }
+                else if (started) break;
+            }
+            if (is_total) s.totalram = val * 1024;
+            else s.freeram = val * 1024;
+        }
+    }
     return true;
 #elif defined(__FreeBSD__) || defined(__DragonFly__) || defined(__OpenBSD__) || defined(__NetBSD__)
     struct timespec ts;
@@ -131,7 +153,56 @@ std::string getResolution() {
   if (!result.empty()) return result;
   return "Unknown";
 };
-    
+
+std::string getFonts() {
+    std::string g = trim(command("gsettings get org.gnome.desktop.interface font-name 2>/dev/null"));
+    if (!g.empty() && g != "''" && g != "No such schema") {
+        if (!g.empty() && g[0] == '\'') g = g.substr(1, g.size() - (g.size() > 1 ? 2 : 1));
+        return g;
+    }
+    const char* home = getenv("HOME");
+    std::string hd = home ? home : "";
+    if (!hd.empty()) {
+        std::ifstream kde(hd + "/.config/kdeglobals");
+        if (kde) {
+            std::string line; bool gen = false;
+            while (std::getline(kde, line)) {
+                if (line == "[General]") gen = true;
+                else if (!line.empty() && line[0] == '[') gen = false;
+                else if (gen && line.rfind("font=", 0) == 0) {
+                    std::string v = line.substr(5);
+                    size_t c = v.find(','); if (c != std::string::npos) v = v.substr(0, c);
+                    return trim(v);
+                }
+            }
+        }
+        std::ifstream gtk(hd + "/.config/gtk-3.0/settings.ini");
+        if (gtk) {
+            std::string line;
+            while (std::getline(gtk, line)) {
+                if (line.rfind("gtk-font-name", 0) == 0) {
+                    size_t eq = line.find('=');
+                    if (eq != std::string::npos) return trim(line.substr(eq + 1));
+                }
+            }
+        }
+    }
+    std::string fc = trim(command("fc-match -a sans 2>/dev/null | head -1"));
+    if (!fc.empty()) {
+        size_t c = fc.find(':'); if (c != std::string::npos) fc = fc.substr(0, c);
+        return fc;
+    }
+    return "Unknown";
+}
+
+std::string getLocalIP() {
+    std::string ip = trim(command("hostname -I 2>/dev/null | awk '{print $1}'"));
+    if (!ip.empty()) return ip;
+    ip = trim(command("ip route get 1.1.1.1 2>/dev/null | grep -oP 'src \\K\\S+'"));
+    if (!ip.empty()) return ip;
+    return "Unknown";
+}
+
 std::string getDistro() {
     std::string content = readFile("/etc/os-release");
     size_t pos = content.find("PRETTY_NAME=");
@@ -156,7 +227,10 @@ DiskInfo getDisk(const std::string& path) {
   result.free = static_cast<unsigned long long>(stat.f_bavail) * stat.f_frsize; 
   return result; 
 }
+std::string getLocalIp() {
 
+  return 0;
+}
 std::string getCPUModel() {
 #ifndef __linux__
     {
@@ -1314,6 +1388,8 @@ int main(int argc, char* argv[]) {
         if (cfg.wm)         addInfo("wm", getWM());
         if (cfg.init)       addInfo("init", getInit());
         if (cfg.battery) { std::string bat = getBattery(); if (!bat.empty()) addInfo("battery", bat); }
+        if (cfg.fonts)   addInfo("fonts", getFonts());
+        if (cfg.localip) addInfo("localip", getLocalIP());
         if (cfg.disk)       addInfo("disk", GetDiskInfo());
         if (cfg.lastrun && !cfg.lastrunstr.empty())
             infoLines.push_back(cfg.textcolor + pad("lastrun", labelW) + colors::RESET + " " + cfg.lastrunstr);
@@ -1364,6 +1440,8 @@ int main(int argc, char* argv[]) {
         if (cfg.wm)         showInfo("wm", getWM(), cfg.textcolor);
         if (cfg.init)       showInfo("init", getInit(), cfg.textcolor);
         if (cfg.battery) { std::string bat = getBattery(); if (!bat.empty()) showInfo("battery", bat, cfg.textcolor); }
+        if (cfg.fonts)   showInfo("fonts", getFonts(), cfg.textcolor);
+        if (cfg.localip) showInfo("localip", getLocalIP(), cfg.textcolor);
         if (cfg.disk)       showInfo("disk", GetDiskInfo(), cfg.textcolor);
         if (cfg.lastrun && !cfg.lastrunstr.empty())
             std::cout << cfg.textcolor << "lastrun" << "  " << colors::RESET << cfg.lastrunstr << "\n";
