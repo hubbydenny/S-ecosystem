@@ -125,7 +125,7 @@ std::string getTerminal() { const char* vars[] = {
 };
 
 std::string getResolution() {
-  std::string result = command("xrandr 2>/dev/null | grep -oE '[0-9]+x[0-9]+\\+[0-9]+\\+[0-9]+' | head>
+  std::string result = command("xrandr 2>/dev/null | grep -oE '[0-9]+x[0-9]+\\+[0-9]+\\+[0-9]+' | head>");
   if (!result.empty()) return result;
   result = command("wlr-randr | awk '/current/ {print $1, $3} '"); //fixed wlr that not shows resolut
   if (!result.empty()) return result;
@@ -188,35 +188,111 @@ std::string getCPUModel() {
     return "Unknown";
 };
 
+static std::string tidyGpuName(const std::string& s) {
+    size_t b = s.find('[');
+    size_t e = s.rfind(']');
+    if (b != std::string::npos && e != std::string::npos && e > b) {
+        std::string inner = s.substr(b + 1, e - b - 1);
+        if (!inner.empty()) return inner;
+    }
+    return s;
+}
+
+static std::string gpuVendorShort(const std::string& v) {
+    if (v.find("NVIDIA") != std::string::npos || v.find("nVidia") != std::string::npos) return "NVIDIA";
+    if (v.find("Advanced Micro") != std::string::npos || v.find("AMD") != std::string::npos || v.find("ATI") != std::string::npos) return "AMD";
+    if (v.find("Intel") != std::string::npos) return "Intel";
+    if (v.find("VMware") != std::string::npos) return "VMware";
+    if (v.find("VirtualBox") != std::string::npos || v.find("InnoTek") != std::string::npos) return "VirtualBox";
+    if (v.find("Red Hat") != std::string::npos) return "virtio-gpu";
+    return "";
+}
+
 std::string getGPUModel() {
 #ifndef __linux__
     {
         FILE* p = popen("pciconf -lv 2>/dev/null", "r");
         if (p) {
             char buf[1024];
+            bool in_gpu = false;
+            std::string device_name;
+            std::vector<std::string> found;
             while (fgets(buf, sizeof buf, p)) {
                 std::string line(buf);
-                if (line.find("class=0x03") == std::string::npos) continue;
-                size_t v = line.find("vendor=0x");
-                if (v == std::string::npos) continue;
-                std::string id = line.substr(v + 9, 4);
-                pclose(p);
-                if (id == "10de") return "NVIDIA";
-                if (id == "1002") return "AMD";
-                if (id == "8086") return "Intel";
-                if (id == "15ad") return "VMware";
-                if (id == "80ee") return "VirtualBox";
-                return "Unknown GPU";
-            } //need to make it with lspci | grep -E "VGA|3D" | sed 's/.*controller: 
+                if (!line.empty() && (line[0] != ' ' && line[0] != '\t')) {
+                    in_gpu = line.find("class=0x03") != std::string::npos;
+                    continue;
+                }
+                if (!in_gpu) continue;
+                size_t d = line.find("device");
+                if (d == std::string::npos) continue;
+                size_t q1 = line.find('\'', d);
+                if (q1 == std::string::npos) continue;
+                size_t q2 = line.find('\'', q1 + 1);
+                if (q2 == std::string::npos) continue;
+                found.push_back(tidyGpuName(line.substr(q1 + 1, q2 - q1 - 1)));
+                in_gpu = false;
+            }
             pclose(p);
+            if (!found.empty()) {
+                std::string out;
+                for (size_t i = 0; i < found.size(); i++) {
+                    if (i) out += ", ";
+                    out += found[i];
+                }
+                return out;
+            }
+        }
+    }
+#endif
+#ifdef __linux__
+    {
+        FILE* p = popen("lspci -mm 2>/dev/null", "r");
+        if (p) {
+            char buf[2048];
+            std::vector<std::string> found;
+            while (fgets(buf, sizeof buf, p)) {
+                std::string line(buf);
+                bool gpu_class =
+                    line.find("\"VGA compatible controller\"") != std::string::npos ||
+                    line.find("\"3D controller\"") != std::string::npos ||
+                    line.find("\"Display controller\"") != std::string::npos;
+                if (!gpu_class) continue;
+
+                std::vector<std::string> quoted;
+                size_t pos = line.find('"');
+                while (pos != std::string::npos) {
+                    size_t end = line.find('"', pos + 1);
+                    if (end == std::string::npos) break;
+                    quoted.push_back(line.substr(pos + 1, end - pos - 1));
+                    pos = line.find('"', end + 1);
+                }
+                if (quoted.size() < 3) continue;
+
+                std::string name = tidyGpuName(quoted[2]);
+                std::string vs = gpuVendorShort(quoted[1]);
+                if (!vs.empty() && name.find(vs) != 0) name = vs + " " + name;
+                bool dup = false;
+                for (const auto& f : found) if (f == name) { dup = true; break; }
+                if (!dup) found.push_back(name);
+            }
+            pclose(p);
+            if (!found.empty()) {
+                std::string out;
+                for (size_t i = 0; i < found.size(); i++) {
+                    if (i) out += ", ";
+                    out += found[i];
+                }
+                return out;
+            }
         }
     }
 #endif
     std::string vendor = readFirstLine("/sys/class/drm/card0/device/vendor");
     std::string device = readFirstLine("/sys/class/drm/card0/device/device");
     std::string name;
-    if (vendor == "0x10de") name = "NVIDIA";
-    else if (vendor == "0x1002") name = "AMD";
+    if (vendor == "0x10de") name = "Nvidia";
+    else if (vendor == "0x1002") name = "Amd";
     else if (vendor == "0x8086") name = "Intel";
     else if (vendor == "0x15ad") name = "VMware";
     else if (vendor == "0x80ee") name = "VirtualBox";
