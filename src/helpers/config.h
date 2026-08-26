@@ -64,8 +64,8 @@ std::string block_style = "square";
 int block_rows = 2;
 bool block_pairs = true;
 std::vector<std::string> block_colors; //square, rounded
-bool shell = true;
-bool terminal = true;
+  bool shell = true;
+  bool terminal = true;
 bool resolution = true;
 bool disk = true;
 bool packages = true;

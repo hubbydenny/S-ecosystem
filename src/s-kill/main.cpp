@@ -1,9 +1,21 @@
-// kill — отправка сигналов процессам.
-//
-// План: kill(2) по PID или по имени (поиск по /proc/*/comm);
-//   kill <pid>         — SIGTERM
-//   kill -9 <pid>      — SIGKILL (флаг -s или -<N>)
-//   kill -l            — список сигналов
-// Возврат: 0 при успехе, 1 при ошибке (нет прав/нет процесса).
-//
-// (код появится по запросу — сейчас только заготовка)
+#include <iostream>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <cstring>
+#include <unistd.h>
+#include <string>
+
+int main(int argc, char **argv) {
+
+    if (argc != 2) { 
+        std::cerr << "Usage: kill <process ID\n";
+        return 0;
+    }
+
+    pid_t process = std::stoi(argv[1]);
+    if (kill(process, 9)) {
+        std::cerr << strerror(errno) << '\n';
+        return 0;
+    }
+}
+

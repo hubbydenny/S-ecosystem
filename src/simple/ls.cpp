@@ -1,5 +1,4 @@
-/// #TODO -h  человекочитаемые размеры (KiB/MiB)
-//   -t  сортировка по времени изменения
+/// #TODO  человекочитаемые размеры (KiB/MiB)
 #include <iostream>
 #include <filesystem>
 #include <ostream>

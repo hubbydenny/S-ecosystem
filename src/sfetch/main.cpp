@@ -129,12 +129,29 @@ std::string readFirstLine(const std::string& path) {
 };
 
 std::string getShell() {
+  int ppid = -1;
+  std::ifstream st("/proc/self/status");
+  std::string line;
+  while (std::getline(st, line)) {
+    if (line.rfind("PPid:", 0) == 0) {
+      try { ppid = std::stoi(line.substr(5)); } catch (...) {}
+      break;
+    }
+  }
+  if (ppid > 0) {
+    std::ifstream c("/proc/" + std::to_string(ppid) + "/comm");
+    std::string comm;
+    if (std::getline(c, comm) && !comm.empty()) {
+      if (comm.back() == '\n') comm.pop_back();
+      if (!comm.empty()) return comm;
+    }
+  }
   const char* shell = getenv("SHELL");
   if (!shell) return "Unknown";
   std::string path(shell);
   size_t pos = path.find_last_of('/');
   if (pos != std::string::npos) return path.substr(pos + 1);
-  return path; 
+  return path;
 };
 
 std::string getTerminal() { const char* vars[] = {
@@ -1449,13 +1466,13 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        toml::table t = toml::parse_file(path);             
-        if (!t.contains("state"))                      
+        toml::table t = toml::parse_file(path);
+        if (!t.contains("state"))
             t.insert("state", toml::table{});
         t["state"].as_table()->insert_or_assign("lastrun", currentTime());
         std::ofstream(path) << t;
     } catch (const toml::parse_error& e) {
         std::cerr << "Error config fail\n";
     }  
-} 
+}
 
