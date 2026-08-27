@@ -12,8 +12,12 @@
 #include <toml++/toml.hpp>
 #include <termios.h>
 #include <fcntl.h>
+#include <cctype>
+#include <filesystem>
 
 static std::map<std::string, std::string> g_aliases;
+static std::string g_histfile;
+static int g_last_status = 0;
 
 static std::vector<std::string> g_history;
 static size_t g_histidx = 0;
@@ -91,6 +95,9 @@ static void show_help() {
         "  echo [text]       print text\n"
         "  clear             clear screen\n"
         "  exit | quit       leave the shell\n"
+        "  alias [n=v]       show/define aliases (always work at runtime)\n"
+        "  unalias <name>    remove an alias\n"
+        "  commit [msg]      git add -A && git commit -m [msg]\n"
         "S-ecosystem commands (run as programs):\n"
         "  sfetch            system info fetch\n"
         "  scat <file>       print file (alias: cat)\n"
@@ -134,6 +141,48 @@ static bool run_builtin(const std::vector<std::string>& args) {
         return true;
     }
     if (cmd == "clear") { std::cout << "\033[2J\033[H"; return true; }
+    if (cmd == "alias") {
+        if (args.size() == 1) {
+            for (auto& [k, v] : g_aliases)
+                std::cout << k << "='" << v << "'\n";
+            return true;
+        }
+        for (size_t i = 1; i < args.size(); i++) {
+            auto eq = args[i].find('=');
+            if (eq == std::string::npos) {
+                auto it = g_aliases.find(args[i]);
+                if (it != g_aliases.end()) std::cout << it->first << "='" << it->second << "'\n";
+                else std::cerr << "alias: " << args[i] << ": not found\n";
+                continue;
+            }
+            g_aliases[args[i].substr(0, eq)] = args[i].substr(eq + 1);
+        }
+        return true;
+    }
+    if (cmd == "unalias") {
+        for (size_t i = 1; i < args.size(); i++) {
+            if (g_aliases.erase(args[i]) == 0)
+                std::cerr << "unalias: " << args[i] << ": not found\n";
+        }
+        return true;
+    }
+    if (cmd == "commit") {
+        std::string msg = "update";
+        if (args.size() > 1) {
+            msg = args[1];
+            for (size_t i = 2; i < args.size(); i++) msg += " " + args[i];
+        }
+        if (run_external({"git", "add", "-A"}) != 0) {
+            std::cerr << "commit: git add failed\n";
+            return true;
+        }
+        if (run_external({"git", "commit", "-m", msg}) != 0) {
+            std::cerr << "commit: nothing to commit or git error\n";
+            return true;
+        }
+        std::cout << "committed: " << msg << "\n";
+        return true;
+    }
     return false;
 }
 
@@ -160,6 +209,39 @@ static std::vector<std::string> expand_alias(std::vector<std::string> args) {
         pre.insert(pre.end(), args.begin() + 1, args.end());
         args = std::move(pre);
     }
+    return args;
+}
+
+static std::string expand_env_word(const std::string& w, int st) {
+    std::string out; size_t i = 0;
+    while (i < w.size()) {
+        if (w[i] == '$') {
+            if (i + 1 < w.size() && w[i+1] == '?') { out += std::to_string(st); i += 2; continue; }
+            size_t j = i + 1;
+            if (i + 1 < w.size() && w[i+1] == '{') {
+                size_t k = w.find('}', i + 2);
+                if (k != std::string::npos) {
+                    std::string name = w.substr(i + 2, k - (i + 2));
+                    const char* v = std::getenv(name.c_str());
+                    out += v ? v : "";
+                    i = k + 1; continue;
+                }
+            }
+            while (j < w.size() && (std::isalnum((unsigned char)w[j]) || w[j] == '_')) j++;
+            if (j > i + 1) {
+                std::string name = w.substr(i + 1, j - (i + 1));
+                const char* v = std::getenv(name.c_str());
+                out += v ? v : "";
+                i = j; continue;
+            }
+            out += '$'; i++;
+        } else { out += w[i]; i++; }
+    }
+    return out;
+}
+
+static std::vector<std::string> expand_env_all(std::vector<std::string> args) {
+    for (auto& a : args) a = expand_env_word(a, g_last_status);
     return args;
 }
 
@@ -253,7 +335,7 @@ static int run_pipeline(const Pipeline& p) {
             if (prev_read != -1) close(prev_read);
             if (pipefd[0] != -1) close(pipefd[0]);
             if (pipefd[1] != -1) close(pipefd[1]);
-            auto args = expand_alias(cmd.argv);
+            auto args = expand_env_all(expand_alias(cmd.argv));
             if (!args.empty()) {
                 if (run_builtin(args)) { std::cout << std::flush; _exit(0); }
                 execvp(args[0].c_str(), vec_cstr(args).data());
@@ -275,7 +357,7 @@ static int run_item(const Pipeline& p) {
     if (p.cmds.size() == 1 && p.cmds[0].redir.in.empty() && p.cmds[0].redir.out.empty()) {
         const Command& c = p.cmds[0];
         if (c.argv.empty()) return 0;
-        auto args = expand_alias(c.argv);
+        auto args = expand_env_all(expand_alias(c.argv));
         if (run_builtin(args)) return 0;
         return run_external(args);
     }
@@ -293,6 +375,7 @@ static void execute(const std::string& line) {
             else if (op == ChainItem::OR && status == 0) run = false;
         }
         if (run) status = run_item(items[i].pipe);
+        g_last_status = status;
     }
 }
 
@@ -371,10 +454,23 @@ int main(int argc, char* argv[]) {
     }
 
     std::string line;
+    {
+        std::error_code ec;
+        std::filesystem::create_directories(std::string(std::getenv("HOME")) + "/.cache/se", ec);
+        g_histfile = std::string(std::getenv("HOME")) + "/.cache/se/history";
+        std::ifstream hf(g_histfile);
+        std::string hl;
+        while (std::getline(hf, hl)) if (!hl.empty()) g_history.push_back(hl);
+    }
+
     while (true) {
         if (!read_line(line)) break;
         if (line.empty()) continue;
         g_history.push_back(line);
+        {
+            std::ofstream out(g_histfile, std::ios::app);
+            if (out) out << line << "\n";
+        }
         execute(line);
     }
     return 0;
