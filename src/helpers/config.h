@@ -39,6 +39,7 @@ init = true
 battery = true
 fonts = true
 localip = true
+truecolor = false
 
 [colors]
 logocolor = "white"
@@ -72,10 +73,11 @@ bool packages = true;
 bool de = true;
 bool wm = true;
 bool init = true;
-bool battery = true;
-bool fonts = true;
-bool localip = true;
-std::string textcolor = colors::BLUE;
+  bool battery = true;
+  bool fonts = true;
+  bool localip = true;
+  bool truecolor = false;
+  std::string textcolor = colors::BLUE;
 std::string logocolor = colors::RESET;
 std::string lastrunstr;
 //bool shell = true;::
@@ -154,14 +156,19 @@ Config loadConfig(const std::string& path) {
         c.battery = t["setup"]["battery"].value_or(c.battery);
         c.fonts   = t["setup"]["fonts"].value_or(c.fonts);
         c.localip = t["setup"]["localip"].value_or(c.localip);
+        c.truecolor = t["setup"]["truecolor"].value_or(c.truecolor);
         c.lastrunstr = t["state"]["lastrun"].value_or(c.lastrunstr);
 
         std::string n = t["colors"]["logocolor"].value_or(std::string("white"));
         c.logocolor = resolveColor(n, colors::RESET);
-        c.block_style = t["setup"]["block_style"].value_or(std::string("square"));
-        c.block_rows = t["setup"]["block_rows"].value_or(c.block_rows);
-        c.block_pairs = t["setup"]["block_pairs"].value_or(c.block_pairs);
-        if (auto arr = t["setup"]["block_colors"].as_array())
+        c.block_style = t["blocks"]["block_style"].value_or(t["setup"]["block_style"].value_or(std::string("square")));
+        c.block_rows = t["blocks"]["block_rows"].value_or(t["setup"]["block_rows"].value_or(c.block_rows));
+        c.block_pairs = t["blocks"]["block_pairs"].value_or(t["setup"]["block_pairs"].value_or(c.block_pairs));
+        if (auto arr = t["blocks"]["block_colors"].as_array())
+            for (auto& e : *arr)
+                if (auto s = e.value<std::string>())
+                    c.block_colors.push_back(*s);
+        else if (auto arr = t["setup"]["block_colors"].as_array())
             for (auto& e : *arr)
                 if (auto s = e.value<std::string>())
                     c.block_colors.push_back(*s);
@@ -171,5 +178,29 @@ Config loadConfig(const std::string& path) {
         std::cerr << "!!error_error_config_error!!: " << e.description() << "\n";
     }
     return c;
+}
+
+// When blocks = true, document the available block options in the config file
+// (as comments + active lines under a [blocks] section) if not already present.
+static void ensureBlockDocs(const std::string& path) {
+    std::ifstream f(path);
+    if (!f) return;
+    std::string content((std::istreambuf_iterator<char>(f)), std::istreambuf_iterator<char>());
+    f.close();
+    if (content.find("block_style") != std::string::npos) return; // already documented
+    std::string doc =
+        "\n"
+        "# --- color blocks customization (written because blocks = true) ---\n"
+        "# block_style: layout of cells -> square | rounded | circle\n"
+        "# block_rows:   number of rows in the color grid (default 2)\n"
+        "# block_pairs:  render cells as double blocks (true/false)\n"
+        "# block_colors: ordered list of color names, e.g. [\"red\",\"blue\",\"green\"]\n"
+        "[blocks]\n"
+        "block_style = \"rounded\"\n"
+        "block_rows = 2\n"
+        "block_pairs = true\n"
+        "# block_colors = [\"red\",\"orange\",\"yellow\",\"lime\",\"aqua\",\"skyblue\",\"purple\",\"hotpink\",\"lightpink\",\"lightorange\",\"gold\",\"olive\",\"turquoise\",\"lightblue\",\"lpurple\",\"silver\"]\n";
+    std::ofstream out(path, std::ios::app);
+    if (out) out << doc;
 }
 

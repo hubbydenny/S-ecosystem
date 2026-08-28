@@ -402,6 +402,12 @@ std::string humanBytes(unsigned long long bytes) {
     return buf;
 };
 
+std::string ramStr(const SysStats& info) {
+    unsigned long long used = info.totalram - info.freeram;
+    int pct = info.totalram ? (int)(used * 100 / info.totalram) : 0;
+    return humanBytes(used) + " / " + humanBytes(info.totalram) + " (" + std::to_string(pct) + "%)";
+}
+
 std::string GetDiskInfo() {
   DiskInfo disk = getDisk("/");
   if (!disk.total) return "Unknown";
@@ -1312,13 +1318,25 @@ d###P            N####p
 }
 //!!SO MUCH LOGOS FROM FASTFETCH!!
 
-void showLogo(const std::string& color, const std::string& logoName) {
+// fastfetch-style vertical gradient (cyan -> purple) when truecolor is on
+static std::string logoColorAt(const Config& cfg, size_t idx, size_t total) {
+    if (!cfg.truecolor) return cfg.logocolor;
+    int r0 = 56, g0 = 189, b0 = 248;   // top: sky/cyan
+    int r1 = 168, g1 = 85, b1 = 247;   // bottom: purple
+    double t = total > 1 ? (double)idx / (total - 1) : 0.0;
+    int r = (int)(r0 + (r1 - r0) * t + 0.5);
+    int g = (int)(g0 + (g1 - g0) * t + 0.5);
+    int b = (int)(b0 + (b1 - b0) * t + 0.5);
+    return colors::TRUECOLOR(r, g, b);
+}
+
+void showLogo(const Config& cfg, const std::string& logoName) {
     auto lines = getDifferentLogoLines(logoName);
     if (!lines.empty()) {
-        for (const auto& l : lines)
-            std::cout << color << l << colors::RESET << "\n";
+        for (size_t i = 0; i < lines.size(); i++)
+            std::cout << logoColorAt(cfg, i, lines.size()) << lines[i] << colors::RESET << "\n";
     } else {
-        showplan9Logo(color);
+        showplan9Logo(logoColorAt(cfg, 0, 1));
     }
 }
 
@@ -1336,6 +1354,8 @@ int main(int argc, char* argv[]) {
     std::string path = std::string(getenv("HOME")) + "/.config/sfetch/config.toml";
     ensureConfig(path);
     Config cfg = loadConfig(path);
+    if (cfg.blocks)
+        ensureBlockDocs(path);
 
     SysStats info;
     if (!getSysStats(info)) {
@@ -1392,7 +1412,7 @@ int main(int argc, char* argv[]) {
         if (cfg.os)         addInfo("os", distro + " " + getArchitecture());
         if (cfg.kernel)     addInfo("kernel", std::string(un.release));
         if (cfg.uptime)     addInfo("uptime", humanUptime(info.uptime));
-        if (cfg.usedram)    addInfo("ram", humanBytes(info.totalram - info.freeram) + " / " + humanBytes(info.totalram));
+        if (cfg.usedram)    addInfo("ram", ramStr(info));
         if (cfg.fullram)    addInfo("totalram", humanBytes(info.totalram));
         if (cfg.procs)      infoLines.push_back(cfg.textcolor + pad("procs", labelW) + colors::RESET + " " + std::to_string(info.procs));
         if (cfg.cpu)        addInfo("cpu", getCPUModel());
@@ -1426,7 +1446,7 @@ int main(int argc, char* argv[]) {
                 if (logoName == "kiss" || logoName == "Kiss")
                     std::cout << logoLines[i];
                 else
-                    std::cout << cfg.logocolor << logoLines[i] << colors::RESET;
+                    std::cout << logoColorAt(cfg, i, logoLines.size()) << logoLines[i] << colors::RESET;
                 size_t w = visWidth(logoLines[i]);
                 if (w < maxLogoWidth) std::cout << std::string(maxLogoWidth - w, ' ');
             } else {
@@ -1438,13 +1458,13 @@ int main(int argc, char* argv[]) {
         }
         if (cfg.blocks) printBlocks(std::string(maxLogoWidth + 2, ' '), cfg);
     } else {
-        if (cfg.logo) showLogo(cfg.logocolor, logoName);
+        if (cfg.logo) showLogo(cfg, logoName);
         std::cout << colors::BOLD << hostname << "@" << un.sysname << colors::RESET << "\n";
         if (cfg.line) std::cout << "=-=-=-=-=-=-=-=\n";
         if (cfg.os)         showInfo("os", distro + " " + getArchitecture(), cfg.textcolor);
         if (cfg.kernel)     showInfo("kernel", std::string(un.release), cfg.textcolor);
         if (cfg.uptime)     showInfo("uptime", humanUptime(info.uptime), cfg.textcolor);
-        if (cfg.usedram)    showInfo("ram", humanBytes(info.totalram - info.freeram) + " / " + humanBytes(info.totalram), cfg.textcolor);
+        if (cfg.usedram)    showInfo("ram", ramStr(info), cfg.textcolor);
         if (cfg.fullram)    showInfo("totalram", humanBytes(info.totalram), cfg.textcolor);
         if (cfg.procs)      std::cout << cfg.textcolor << "procs" << "  " << colors::RESET << info.procs << "\n";
         if (cfg.cpu)        showInfo("cpu", getCPUModel(), cfg.textcolor);

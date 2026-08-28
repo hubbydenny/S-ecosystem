@@ -1,4 +1,6 @@
 #pragma once
+#include <cstdio>
+#include <string>
 namespace colors {
   const char* BLACK = "\033[0;30m";
   const char* RED = "\033[0;31m";
@@ -83,4 +85,11 @@ namespace colors {
   const char* TEAL = "\033[38;5;6m";
   const char* GOLD = "\033[38;5;226m";
   const char* SILVER = "\033[38;5;250m";
+
+  // 24-bit truecolor foreground escape (fastfetch-style)
+  inline std::string TRUECOLOR(int r, int g, int b) {
+    char buf[32];
+    std::snprintf(buf, sizeof buf, "\033[38;2;%d;%d;%dm", r, g, b);
+    return std::string(buf);
+  }
 }

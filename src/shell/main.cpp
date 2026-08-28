@@ -12,6 +12,7 @@
 #include <toml++/toml.hpp>
 #include <termios.h>
 #include <fcntl.h>
+#include <pwd.h>
 #include <cctype>
 #include <filesystem>
 
@@ -76,11 +77,29 @@ static std::string self_dir() {
 }
 
 static int builtin_cd(const std::vector<std::string>& args) {
-    const char* target = args.size() > 1 ? args[1].c_str() : getenv("HOME");
-    if (!target) target = "/";
-    if (chdir(target) != 0) {
+    std::string target;
+    if (args.size() > 1) {
+        if (args[1] == "-") {
+            const char* old = std::getenv("OLDPWD");
+            if (!old || !*old) { std::cerr << "cd: OLDPWD not set\n"; return 1; }
+            target = old;
+        } else {
+            target = args[1];
+        }
+    } else {
+        const char* h = std::getenv("HOME");
+        target = h ? h : "/";
+    }
+    char prev[4096];
+    const char* p = getcwd(prev, sizeof prev);
+    if (chdir(target.c_str()) != 0) {
         std::cerr << "cd: " << target << ": " << strerror(errno) << "\n";
         return 1;
+    }
+    char ncwd[4096];
+    if (getcwd(ncwd, sizeof ncwd)) {
+        setenv("PWD", ncwd, 1);
+        if (p) setenv("OLDPWD", prev, 1);
     }
     return 0;
 }
@@ -90,7 +109,7 @@ static void show_help() {
         "S-ecosystem shell (se)\n"
         "builtins:\n"
         "  help              show this help\n"
-        "  cd [dir]          change directory\n"
+        "  cd [dir]          change directory (~, ~user, - supported)\n"
         "  pwd               print working directory\n"
         "  echo [text]       print text\n"
         "  clear             clear screen\n"
@@ -201,6 +220,12 @@ static void load_aliases(const std::string& path) {
     } catch (...) {}
 }
 
+static bool is_wrapper_cmd(const std::string& c) {
+    return c == "sudo" || c == "doas" || c == "env" || c == "time" ||
+           c == "nice" || c == "nohup" || c == "xargs" || c == "watch" ||
+           c == "strace" || c == "catchsegv" || c == "setsid";
+}
+
 static std::vector<std::string> expand_alias(std::vector<std::string> args) {
     for (int d = 0; d < 16 && !args.empty(); d++) {
         auto it = g_aliases.find(args[0]);
@@ -208,6 +233,18 @@ static std::vector<std::string> expand_alias(std::vector<std::string> args) {
         auto pre = tokenize(it->second);
         pre.insert(pre.end(), args.begin() + 1, args.end());
         args = std::move(pre);
+    }
+    if (!args.empty() && is_wrapper_cmd(args[0])) {
+        std::vector<std::string> sub(args.begin() + 1, args.end());
+        for (int d = 0; d < 16 && !sub.empty(); d++) {
+            auto it = g_aliases.find(sub[0]);
+            if (it == g_aliases.end()) break;
+            auto pre = tokenize(it->second);
+            pre.insert(pre.end(), sub.begin() + 1, sub.end());
+            sub = std::move(pre);
+        }
+        args = std::vector<std::string>{args[0]};
+        args.insert(args.end(), sub.begin(), sub.end());
     }
     return args;
 }
@@ -240,8 +277,20 @@ static std::string expand_env_word(const std::string& w, int st) {
     return out;
 }
 
+static std::string expand_tilde(const std::string& w) {
+    if (w.empty() || w[0] != '~') return w;
+    if (w.size() == 1) { const char* h = std::getenv("HOME"); return h ? h : "/"; }
+    if (w[1] == '/')  { const char* h = std::getenv("HOME"); return std::string(h ? h : "/") + w.substr(1); }
+    size_t sl = w.find('/');
+    std::string user = w.substr(1, sl == std::string::npos ? std::string::npos : sl - 1);
+    std::string rest = (sl == std::string::npos) ? "" : w.substr(sl);
+    struct passwd* pw = getpwnam(user.c_str());
+    if (!pw) return w;
+    return std::string(pw->pw_dir) + rest;
+}
+
 static std::vector<std::string> expand_env_all(std::vector<std::string> args) {
-    for (auto& a : args) a = expand_env_word(a, g_last_status);
+    for (auto& a : args) a = expand_tilde(expand_env_word(a, g_last_status));
     return args;
 }
 
