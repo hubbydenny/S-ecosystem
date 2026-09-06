@@ -36,35 +36,6 @@ git clone https://github.com/hubbydenny/S-ecosystem
 cd S-ecosystem
 make
 sudo make install
-```
-### PACKETS ARE NOT ACCEPTED
-### Void Linux
-```bash
-sudo xbps-install -S s-ecosystem
-```
-
-### Arch Linux (AUR)
-```bash
-yay -S s-ecosystem
-```
-
-### Fedora
-```bash
-sudo dnf copr enable hubbydenny/s-ecosystem
-sudo dnf install s-ecosystem
-```
-
-### NixOS
-```bash
-nix-env -iA nixpkgs.s-ecosystem
-```
-
-### Gentoo
-```bash
-sudo eselect repository add guru git@github.com:hubbydenny/guru.git
-sudo emaint sync -r guru
-sudo emerge s-ecosystem
-```
 
 ### OBS (Debian, Ubuntu, openSUSE)
 ```bash
